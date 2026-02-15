@@ -78,7 +78,7 @@ class ShoppingListCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShoppingList
-        fields = ['user', 'project', 'name']
+        fields = ['user', 'project', 'name', "id"]
 
     def create(self, validated_data):
         shopping_list = ShoppingList.objects.create(**validated_data)

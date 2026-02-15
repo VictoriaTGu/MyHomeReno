@@ -39,7 +39,7 @@ export default function ProjectSelectionPage() {
 
       // Ensure we received a created object with an id before navigating
       const created = response && response.data;
-      const newId = created && created.project;
+      const newId = created && created.id;
       if (!newId) {
         console.error('createShoppingList returned unexpected response:', response);
         alert('Could not create shopping list. See console for details.');
