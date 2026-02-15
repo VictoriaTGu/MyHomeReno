@@ -109,7 +109,7 @@ class ShoppingListViewSet(viewsets.ModelViewSet):
             # Save with the authenticated user
             self.perform_create(serializer)
             headers = self.get_success_headers(serializer.data)
-            self.logger.info(
+            self.logger.debug(
                 "ShoppingList created: user=%s shopping_list_id=%s",
                 getattr(request.user, 'id', None),
                 serializer.data.get('id')
@@ -124,6 +124,54 @@ class ShoppingListViewSet(viewsets.ModelViewSet):
                 request.data,
             )
             return Response({'detail': 'Internal server error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def user(self, request, *args, **kwargs):
+        """Get shopping lists for a specified user (only own or if superuser)."""
+        # Log incoming parameters for debugging
+        self.logger.info(
+            "ShoppingList.user called: requester=%s query_params=%s",
+            getattr(request.user, 'id', None),
+            dict(request.query_params),
+        )
+
+        user_id = request.query_params.get('user_id')
+        if not user_id:
+            return Response(
+                {'detail': 'user_id query parameter is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            user_id = int(user_id)
+        except ValueError:
+            return Response(
+                {'detail': 'user_id must be an integer'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Only allow users to access their own shopping lists (unless superuser)
+        # note: user_id is a string from query params; compare as int
+        if int(user_id) != request.user.id and not request.user.is_superuser:
+            return Response(
+                {'detail': 'You can only view your own shopping lists'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        queryset = ShoppingList.objects.filter(user__id=user_id)
+        serializer = self.get_serializer(queryset, many=True)
+
+        # Log brief summary of response (count and ids) and full debug at DEBUG level
+        ids = [s.get('id') for s in serializer.data]
+        self.logger.info(
+            "ShoppingList.user responding: requester=%s user_id=%s count=%s ids=%s",
+            getattr(request.user, 'id', None),
+            user_id,
+            len(ids),
+            ids,
+        )
+        self.logger.debug("ShoppingList.user full response: %s", serializer.data)
+
+        return Response(serializer.data)
 
 
 class ShoppingListItemViewSet(viewsets.ModelViewSet):

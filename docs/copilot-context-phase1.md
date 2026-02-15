@@ -119,6 +119,8 @@ We want clear, simple REST endpoints that React can call:
     - Backend should:
       - Create a `ShoppingList`.
       - Populate `ShoppingListItem` rows from that project’s `ProjectMaterial`s
+- `GET /api/shopping-lists/user/{user_id}/`
+  - Returns a list of shopping lists for that user (id, name, description, url).
 - `GET /api/shopping-lists/{id}/`
   - Returns list details + items.
 - `PATCH /api/shopping-lists/{id}/`
@@ -144,8 +146,10 @@ We want clear, simple REST endpoints that React can call:
 
 1. **Project selection page**
    - Fetch `/api/projects/`.
+   - Fetch `/api/shopping-lists/user/{user_id}/`.
    - Display as cards or list.
-   - On choose project → call `POST /api/shopping-lists/` with `project_id` → navigate to shopping list page.
+   - If the user already has a shopping list whose project_id matches that project, then display a button on the card titled 'Edit shopping list' -> call `GET /api/shopping-lists/{id}/` with `id=project_id` → navigate to shopping list page.
+   - If the user doesn't already have a shopping list whose project id matches the project, then display a button on the card titled 'Start Project' → call `POST /api/shopping-lists/` with `project_id` → navigate to shopping list page.
 
 2. **Shopping list page**
    - Fetch list & items via `/api/shopping-lists/{id}/`.

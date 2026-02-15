@@ -63,3 +63,10 @@
 .select-btn:hover {
   background: #0056b3;
 }
+.select-btn.edit-btn {
+  background: #28a745;
+}
+
+.select-btn.edit-btn:hover {
+  background: #218838;
+}

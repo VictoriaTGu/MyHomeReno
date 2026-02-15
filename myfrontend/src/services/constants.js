@@ -5,6 +5,7 @@ export const API_ENDPOINTS = {
   PROJECT_MATERIALS: (projectId) => `/api/projects/${projectId}/default-materials/`,
   SHOPPING_LISTS: '/api/shopping-lists/',
   SHOPPING_LIST_DETAIL: (id) => `/api/shopping-lists/${id}/`,
+  SHOPPING_LISTS_USER: '/api/shopping-lists/user/',
   SHOPPING_LIST_ITEMS: (id) => `/api/shopping-lists/${id}/items/`,
   SHOPPING_LIST_ITEM_DETAIL: (itemId) => `/api/shopping-list-items/${itemId}/`,
   USER_MATERIALS: (userId) => `/api/user-materials/${userId}/`,

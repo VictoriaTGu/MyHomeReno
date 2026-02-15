@@ -69,6 +69,13 @@ export const updateShoppingList = (id, data) => {
   }));
 };
 
+export const getShoppingListsForUser = (userId) => {
+  return apiClient.get(API_ENDPOINTS.SHOPPING_LISTS_USER, { params: { user_id: userId } }).then((res) => ({
+    ...res,
+    data: res.data.results || res.data,
+  }));
+};
+
 // Shopping List Items
 export const addShoppingListItem = (listId, data) => {
   return apiClient.post(API_ENDPOINTS.SHOPPING_LIST_ITEMS(listId), data).then((res) => ({
