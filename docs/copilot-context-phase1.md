@@ -110,6 +110,8 @@ We want clear, simple REST endpoints that React can call:
     - Backend should: create a new `UserMaterial`
 - `PATCH /api/user-materials/{user_id}/{material_id}/`
   - Edits the `quantity` that the user has
+- `DELETE /api/user-materials/{user_id}/{material_id}/`
+  - Deletes that UserMaterial
 
 ### Shopping lists
 
@@ -154,10 +156,20 @@ We want clear, simple REST endpoints that React can call:
 2. **Shopping list page**
    - Fetch list & items via `/api/shopping-lists/{id}/`.
    - Fetch user material information via `/api/user-materials/{user_id}/`
-   - For each shopping list item:
-     - Cross-reference `UserMaterial`s to see if the user has the correct material and quantity already, else an empty checkbox
-     - Allow updates to `quantity` which will update the `ShoppingListItem` not the `UserMaterial`
-   - Allow:
+     Cross-reference `UserMaterial`s with `ShoppingListItem`s to see if the user has the correct material and quantity already.
+   - One section of the page will be called `Shopping List` and will list the items that the
+     user does not already have. Each item will have an empty checkbox next to it, but if the 
+     user clicks the checkmark -> call `POST /api/user-materials/{user_id}/` with the
+     `material_id` and `quantity` specified in that `ShoppingListItem`
+   - One section of the page will be called `Already Have` and will list the items that the
+     user does have (also checking that the user has at least the quantity specified in `ShoppingListItem`). Each item will have an green checkmark next to it.
+     - If the user clicks the checkmark 
+        -> call `DELETE /api/user-materials/{user_id}/{material_id}/` with the `material_id` specified in that `ShoppingListItem`
+     - If the user edits the quantity 
+        -> call `PATCH /api/user-materials/{user_id}/{material_id}/` with the `material_id` specified in that `ShoppingListItem`
+     - If the user clicks delete
+        -> call `DELETE /api/user-materials/{user_id}/{material_id}/` with the `material_id` specified in that `ShoppingListItem`
+   - One section of the page will allow:
      - Add new item with a form showing just required fields.
      - Delete item.
 

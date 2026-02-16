@@ -40,13 +40,14 @@ urlpatterns = [
         'get': 'retrieve'
     }), name='shopping-list-item-detail'),
 
-    # User materials
-    path('user-materials/<int:user_id>/', include(user_materials_router.urls)),
-
-    # User material update (flat route for PATCH)
+    # User material update (flat route for PATCH/DELETE) - MUST be before the nested router
     path('user-materials/<int:user_id>/<int:material_id>/', UserMaterialViewSet.as_view({
-        'patch': 'partial_update'
+        'patch': 'partial_update',
+        'delete': 'destroy',
     }), name='user-material-update'),
+
+    # User materials (nested router - comes after specific flat route)
+    path('user-materials/<int:user_id>/', include(user_materials_router.urls)),
     # Simple auth
     path('auth/login/', LoginView.as_view(), name='api-login'),
 ]

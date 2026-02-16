@@ -201,6 +201,20 @@ class ShoppingListItemViewSet(viewsets.ModelViewSet):
                 context['material_data'] = material_data
         return context
 
+    def get_object(self):
+        """Resolve object by pk or by material_id when provided in the URL.
+
+        This allows routes like /api/user-materials/<user_id>/<material_id>/ to
+        locate the UserMaterial for the authenticated user by material id.
+        """
+        material_id = self.kwargs.get('material_id')
+        if material_id is not None:
+            return get_object_or_404(
+                UserMaterial.objects.filter(user=self.request.user),
+                material__id=material_id,
+            )
+        return super().get_object()
+
     def create(self, request, *args, **kwargs):
         """Handle both existing and new materials."""
         shopping_list_id = kwargs.get('shopping_list_id')
@@ -253,6 +267,7 @@ class UserMaterialViewSet(viewsets.ModelViewSet):
     """
     serializer_class = UserMaterialSerializer
     permission_classes = [IsAuthenticated]
+    lookup_field = 'material_id'
 
     def get_queryset(self):
         """Return materials for current or specified user."""
@@ -276,6 +291,16 @@ class UserMaterialViewSet(viewsets.ModelViewSet):
         else:
             context['user'] = self.request.user
         return context
+
+    def get_object(self):
+        """Resolve UserMaterial by material_id using material__id lookup."""
+        material_id = self.kwargs.get('material_id')
+        if material_id is not None:
+            return get_object_or_404(
+                UserMaterial.objects.filter(user=self.request.user),
+                material__id=material_id,
+            )
+        return super().get_object()
 
     def create(self, request, *args, **kwargs):
         """Handle creation of user material."""
