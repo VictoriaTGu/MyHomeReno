@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProjectSelection from '../components/ProjectSelection';
 import { getProjects, createShoppingList, getShoppingListsForUser } from '../services/api';
+import { getUserId } from '../services/api';
 
 // Mock user ID - in a real app, this would come from authentication
-const MOCK_USER_ID = 1;
+// const MOCK_USER_ID = 1;
 
 export default function ProjectSelectionPage() {
   const [projects, setProjects] = useState([]);
@@ -16,14 +17,19 @@ export default function ProjectSelectionPage() {
 
   useEffect(() => {
     const fetchData = async () => {
+      const uid = getUserId();
+      if (!uid) {
+        navigate('/login');
+        return;
+      }
+
       try {
         const [projectsResponse, listsResponse] = await Promise.all([
           getProjects(),
-          getShoppingListsForUser(MOCK_USER_ID),
+          getShoppingListsForUser(uid),
         ]);
         setProjects(projectsResponse.data);
         setShoppingLists(listsResponse.data);
-        console.log('Shopping Lists Response:', listsResponse.data);
       } catch (err) {
         setError('Failed to load projects');
         console.error(err);
@@ -33,7 +39,7 @@ export default function ProjectSelectionPage() {
     };
 
     fetchData();
-  }, []);
+  }, [navigate]);
 
   const handleSelectProject = async (project) => {
     setIsCreating(true);
@@ -53,7 +59,7 @@ export default function ProjectSelectionPage() {
         return;
       }
 
-      navigate(`/shopping-list/${newId}`, { state: { userId: MOCK_USER_ID } });
+      navigate(`/shopping-list/${newId}`, { state: { userId: getUserId() } });
     } catch (err) {
       alert('Failed to create shopping list');
       console.error(err);
@@ -62,7 +68,7 @@ export default function ProjectSelectionPage() {
   };
 
   const handleEditShoppingList = (listId) => {
-    navigate(`/shopping-list/${listId}`, { state: { userId: MOCK_USER_ID } });
+    navigate(`/shopping-list/${listId}`, { state: { userId: getUserId() } });
   };
 
   if (error) {

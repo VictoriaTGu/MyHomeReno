@@ -21,13 +21,31 @@ export const setToken = (token) => {
 
 export const getToken = () => localStorage.getItem('token');
 
-export const logout = () => setToken(null);
+// User id management (persist alongside token)
+export const setUserId = (userId) => {
+  if (userId == null) {
+    localStorage.removeItem('user_id');
+  } else {
+    localStorage.setItem('user_id', String(userId));
+  }
+};
+
+export const getUserId = () => {
+  const v = localStorage.getItem('user_id');
+  return v == null ? null : parseInt(v, 10);
+};
+
+export const logout = () => {
+  setToken(null);
+  setUserId(null);
+};
 
 export const login = async (username, password) => {
   const res = await apiClient.post(API_ENDPOINTS.LOGIN, { username, password });
   // backend returns { token, user_id }
   const data = res.data || {};
   if (data.token) setToken(data.token);
+  if (data.user_id) setUserId(data.user_id);
   return data;
 };
 
@@ -117,6 +135,13 @@ export const updateUserMaterial = (userId, materialId, data) => {
   return apiClient.patch(API_ENDPOINTS.USER_MATERIAL_UPDATE(userId, materialId), data).then((res) => ({
     ...res,
     data: res.data.results || res.data,
+  }));
+};
+
+export const deleteUserMaterial = (userId, materialId) => {
+  return apiClient.delete(API_ENDPOINTS.USER_MATERIAL_UPDATE(userId, materialId)).then((res) => ({
+    ...res,
+    data: res.data && (res.data.results || res.data),
   }));
 };
 
