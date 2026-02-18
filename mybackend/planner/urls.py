@@ -2,13 +2,14 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     ProjectViewSet, MaterialViewSet, ShoppingListViewSet,
-    ShoppingListItemViewSet, UserMaterialViewSet, LoginView
+    ShoppingListItemViewSet, UserMaterialViewSet, StoreSearchViewSet, LoginView
 )
 
 router = DefaultRouter()
 router.register(r'projects', ProjectViewSet, basename='project')
 router.register(r'materials', MaterialViewSet, basename='material')
 router.register(r'shopping-lists', ShoppingListViewSet, basename='shopping-list')
+router.register(r'store-search', StoreSearchViewSet, basename='store-search')
 
 # Shopping list items - nested router
 shopping_list_items_router = DefaultRouter()

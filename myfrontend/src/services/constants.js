@@ -10,5 +10,6 @@ export const API_ENDPOINTS = {
   SHOPPING_LIST_ITEM_DETAIL: (itemId) => `/api/shopping-list-items/${itemId}/`,
   USER_MATERIALS: (userId) => `/api/user-materials/${userId}/`,
   USER_MATERIAL_UPDATE: (userId, materialId) => `/api/user-materials/${userId}/${materialId}/`,
+  STORE_SEARCH: '/api/store-search/search/',
   LOGIN: '/api/auth/login/',
 };

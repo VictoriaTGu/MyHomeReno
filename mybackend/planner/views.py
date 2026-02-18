@@ -8,12 +8,93 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import authenticate
+from django.conf import settings
 from .models import Project, Material, ShoppingList, ShoppingListItem, UserMaterial
 from .serializers import (
     ProjectSerializer, MaterialSerializer, ProjectMaterialSerializer,
     ShoppingListSerializer, ShoppingListCreateSerializer, ShoppingListItemSerializer,
-    UserMaterialSerializer
+    UserMaterialSerializer, ProductResultSerializer
 )
+from .store_search import get_store_client
+
+
+class StoreSearchViewSet(viewsets.ViewSet):
+    """ViewSet for searching products across different stores.
+    
+    Provides a single unified endpoint for searching products,
+    hiding store-specific implementation details.
+    """
+    permission_classes = [IsAuthenticated]
+    
+    logger = logging.getLogger(__name__)
+    
+    @action(detail=False, methods=['get'])
+    def search(self, request):
+        """Search for products by query string.
+        
+        Query Parameters:
+            q (required): Search query string
+            store (optional): Store name (default: "amazon")
+            limit (optional): Max number of results (default: 5)
+        
+        Returns:
+            List of ProductResult objects with normalized product data
+        """
+        # Get and validate query parameter
+        query = request.query_params.get('q')
+        if not query:
+            return Response(
+                {'detail': 'q query parameter is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Get optional parameters
+        store = request.query_params.get('store', 'amazon').lower()
+        try:
+            limit = int(request.query_params.get('limit', 5))
+        except ValueError:
+            limit = 5
+        
+        # Check if we should use dummy client (for testing)
+        use_dummy = getattr(settings, 'STORE_SEARCH_USE_DUMMY', False)
+        
+        try:
+            # Get appropriate store client
+            client = get_store_client(store, use_dummy=use_dummy)
+            
+            # Perform search
+            self.logger.info(
+                "Store search: user=%s store=%s query=%s limit=%s use_dummy=%s",
+                request.user.id,
+                store,
+                query,
+                limit,
+                use_dummy
+            )
+            results = client.search_products(query, limit=limit)
+            
+            # Serialize results
+            serializer = ProductResultSerializer(results, many=True)
+            return Response(serializer.data)
+            
+        except ValueError as e:
+            self.logger.warning(f"Invalid store parameter: {store}")
+            return Response(
+                {'detail': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except NotImplementedError as e:
+            self.logger.warning(f"Store not implemented: {store}")
+            return Response(
+                {'detail': f"Store '{store}' is not yet supported"},
+                status=status.HTTP_501_NOT_IMPLEMENTED
+            )
+        except Exception as e:
+            self.logger.exception(f"Error searching store: {store}")
+            return Response(
+                {'detail': 'Error searching products. Please try again.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class LoginView(APIView):
@@ -216,7 +297,14 @@ class ShoppingListItemViewSet(viewsets.ModelViewSet):
         return super().get_object()
 
     def create(self, request, *args, **kwargs):
-        """Handle both existing and new materials."""
+        """Handle both existing and new materials, with optional product selection.
+        
+        Accepts optional product_selection dict with fields:
+        - name, description, price, currency, sku, url, image_url, store
+        
+        If product_selection is provided, Material is updated with product details.
+        If not provided, Material is created with minimal data.
+        """
         shopping_list_id = kwargs.get('shopping_list_id')
         shopping_list = get_object_or_404(
             ShoppingList.objects.filter(user=request.user),
@@ -225,6 +313,7 @@ class ShoppingListItemViewSet(viewsets.ModelViewSet):
 
         data = request.data.copy()
         quantity = data.pop('quantity', 1)
+        product_selection = data.pop('product_selection', None)
 
         # Check if material_id is provided
         if 'material' in data:
@@ -233,13 +322,13 @@ class ShoppingListItemViewSet(viewsets.ModelViewSet):
         else:
             # Auto-create material from provided data
             name = data.get('name')
-            category = data.get('category')
+            category = data.get('category', 'general')  # Default category if not provided
             unit = data.get('unit', 'piece')
             store = data.get('store')
 
-            if not name or not category:
+            if not name:
                 return Response(
-                    {'detail': 'name and category are required'},
+                    {'detail': 'name is required'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
@@ -249,6 +338,15 @@ class ShoppingListItemViewSet(viewsets.ModelViewSet):
                 unit=unit,
                 defaults={'store': store}
             )
+            
+            # If product_selection provided, update material with product details
+            if product_selection:
+                material.store = product_selection.get('store', material.store)
+                material.sku = product_selection.get('sku', material.sku)
+                material.product_title = product_selection.get('name')
+                material.product_url = product_selection.get('url')
+                material.product_image_url = product_selection.get('image_url')
+                material.save()
 
         # Get or create shopping list item
         item, created = ShoppingListItem.objects.get_or_create(
@@ -256,6 +354,11 @@ class ShoppingListItemViewSet(viewsets.ModelViewSet):
             material=material,
             defaults={'quantity': quantity}
         )
+
+        if not created:
+            # Update quantity if item already exists
+            item.quantity = quantity
+            item.save()
 
         serializer = self.get_serializer(item)
         return Response(serializer.data, status=status.HTTP_201_CREATED)

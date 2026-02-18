@@ -12,7 +12,8 @@ class ProjectSerializer(serializers.ModelSerializer):
 class MaterialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Material
-        fields = ['id', 'name', 'category', 'store', 'sku', 'unit', 'notes']
+        fields = ['id', 'name', 'category', 'store', 'sku', 'unit', 'notes',
+                  'product_title', 'product_url', 'product_image_url']
 
 
 class ProjectMaterialSerializer(serializers.ModelSerializer):
@@ -127,3 +128,19 @@ class UserMaterialSerializer(serializers.ModelSerializer):
         )
 
         return user_material
+
+
+class ProductResultSerializer(serializers.Serializer):
+    """Serializer for store search product results.
+
+    This represents a normalized product from an external store API.
+    Read-only; used only for returning search results.
+    """
+    name = serializers.CharField()
+    description = serializers.CharField()
+    price = serializers.FloatField()
+    currency = serializers.CharField()
+    sku = serializers.CharField()
+    url = serializers.URLField()
+    image_url = serializers.URLField()
+    store = serializers.CharField()

@@ -19,10 +19,15 @@ class Material(models.Model):
     """Represents a generic material or tool that can appear in multiple projects."""
     name = models.CharField(max_length=255)
     category = models.CharField(max_length=100)  # e.g., "pipe", "fitting", "tool"
-    store = models.CharField(max_length=100, blank=True, null=True)  # e.g., "home_depot", "lowes"
-    sku = models.CharField(max_length=100, blank=True, null=True)  # product SKU
+    store = models.CharField(max_length=100, blank=True, null=True)  # e.g., "home_depot", "lowes", "amazon"
+    sku = models.CharField(max_length=100, blank=True, null=True)  # product SKU (e.g., ASIN for Amazon)
     unit = models.CharField(max_length=50)  # e.g., "piece", "ft", "m"
     notes = models.TextField(blank=True, null=True)
+
+    # Phase 2: Product mapping fields (populated when user selects a product from search)
+    product_title = models.CharField(max_length=500, blank=True, null=True)  # product name from store
+    product_url = models.URLField(blank=True, null=True)  # direct store product link
+    product_image_url = models.URLField(blank=True, null=True)  # primary product image
 
     class Meta:
         ordering = ['name']

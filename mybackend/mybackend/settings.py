@@ -10,6 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+import os
+
+# ... rest of imports ...
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -191,3 +194,11 @@ LOGGING = {
         },
     },
 }
+
+# Phase 2 Store Search Configuration
+# Use dummy store search client for testing (set to False to use real Amazon API)
+STORE_SEARCH_USE_DUMMY = os.getenv('STORE_SEARCH_USE_DUMMY', 'True').lower() in ('true', '1', 'yes')
+
+# Amazon API credentials (if not using dummy client)
+AMAZON_API_KEY = os.getenv('AMAZON_API_KEY', '')
+AMAZON_API_REGION = os.getenv('AMAZON_API_REGION', 'us-east-1')

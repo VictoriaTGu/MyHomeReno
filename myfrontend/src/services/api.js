@@ -102,6 +102,16 @@ export const addShoppingListItem = (listId, data) => {
   }));
 };
 
+// Store Product Search
+export const searchProducts = (query, store = 'amazon') => {
+  return apiClient.get(API_ENDPOINTS.STORE_SEARCH, {
+    params: { q: query, store: store }
+  }).then((res) => ({
+    ...res,
+    data: res.data.results || res.data,
+  }));
+};
+
 export const updateShoppingListItem = (itemId, data) => {
   return apiClient.patch(API_ENDPOINTS.SHOPPING_LIST_ITEM_DETAIL(itemId), data).then((res) => ({
     ...res,

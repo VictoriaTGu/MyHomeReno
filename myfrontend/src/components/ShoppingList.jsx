@@ -3,7 +3,7 @@ import AddItemForm from './AddItemForm';
 import { getShoppingList, getUserMaterials, createUserMaterial, updateUserMaterial, deleteUserMaterial, updateShoppingListItem, deleteShoppingListItem } from '../services/api';
 import './ShoppingList.css';
 
-function SimpleRow({ item, onMarkOwned, onUpdateItem, onDeleteItem }) {
+function SimpleRow({ item, isOwned, onMarkOwned, onUpdateItem, onDeleteItem }) {
   const [qty, setQty] = useState(item.quantity);
   const [saving, setSaving] = useState(false);
 
@@ -17,15 +17,36 @@ function SimpleRow({ item, onMarkOwned, onUpdateItem, onDeleteItem }) {
     }
   };
 
+  const handleCheckboxChange = (e) => {
+    onMarkOwned(e.target.checked);
+  };
+  const unit = item.material?.unit || 'unit';
+  const displayUnit = item.quantity > 1 ? unit + "s" : unit;
+
   return (
-    <div className="list-row">
-      <button className="checkbox-btn" title="Mark as owned" onClick={onMarkOwned}>☐</button>
+    <div className={`list-row ${isOwned ? 'have' : ''}`}>
+      <div className="checkbox-wrapper">
+        <label className="checkbox">
+          <input 
+            className="checkbox__trigger visuallyhidden" 
+            type="checkbox"
+            checked={isOwned}
+            onChange={handleCheckboxChange}
+          />
+          <span className="checkbox__symbol">
+            <svg aria-hidden="true" className="icon-checkbox" width="28px" height="28px" viewBox="0 0 28 28" version="1" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 14l8 7L24 7"></path>
+            </svg>
+          </span>
+        </label>
+      </div>
       <div className="list-row-main">
         <h4>{item.material?.name}</h4>
-        <p className="item-meta">Category: {item.material?.category} | Unit: {item.material?.unit}</p>
+        
       </div>
       <div className="list-row-actions">
-        <input className="quantity-input" type="number" min="0" step="0.1" value={qty} onChange={(e) => setQty(parseFloat(e.target.value) || 0)} />
+        <input className="quantity-input" type="number" min="0" step="1" value={qty} onChange={(e) => setQty(parseFloat(e.target.value) || 0)} />
+        <p className="item-meta">{displayUnit}</p>
         <button className="save-btn" onClick={handleSave} disabled={saving || qty === item.quantity}>{saving ? 'Saving...' : 'Save'}</button>
         <button className="delete-btn" onClick={onDeleteItem}>Delete</button>
       </div>
@@ -175,7 +196,12 @@ export default function ShoppingList({ listId, userId, onBack }) {
                 <SimpleRow
                   key={item.id}
                   item={item}
-                  onMarkOwned={() => handleAddUserMaterial(item)}
+                  isOwned={false}
+                  onMarkOwned={(isOwned) => {
+                    if (isOwned) {
+                      handleAddUserMaterial(item);
+                    }
+                  }}
                   onUpdateItem={async (quantity) => {
                     try {
                       const res = await updateShoppingListItem(item.id, { quantity });
@@ -209,34 +235,35 @@ export default function ShoppingList({ listId, userId, onBack }) {
               .map((item) => {
                 const userMat = userMaterials[item.material?.id];
                 return (
-                  <div key={item.id} className="list-row have">
-                    <button
-                      className="checkbox-btn owned"
-                      title="Remove ownership"
-                      onClick={() => handleRemoveUserMaterial(item.material.id)}
-                    >
-                      ✓
-                    </button>
-                    <div className="list-row-main">
-                      <h4>{item.material?.name}</h4>
-                      <p className="item-meta">Category: {item.material?.category} | Unit: {item.material?.unit}</p>
-                    </div>
-                    <div className="list-row-actions">
-                      <input
-                        className="quantity-input"
-                        type="number"
-                        min="0"
-                        step="0.1"
-                        value={userMat?.quantity ?? item.quantity}
-                        onChange={(e) => {
-                          const q = parseFloat(e.target.value) || 0;
-                          setUserMaterials((prev) => ({ ...prev, [item.material.id]: { ...(prev[item.material.id] || {}), quantity: q } }));
-                        }}
-                      />
-                      <button className="save-btn" onClick={() => handleUpdateUserMaterial(item.material.id, (userMaterials[item.material.id]?.quantity ?? item.quantity))}>Save</button>
-                      <button className="delete-btn" onClick={() => handleRemoveUserMaterial(item.material.id)}>Delete</button>
-                    </div>
-                  </div>
+                  <SimpleRow
+                    key={item.id}
+                    item={item}
+                    isOwned={true}
+                    onMarkOwned={(isOwned) => {
+                      if (!isOwned) {
+                        handleRemoveUserMaterial(item.material.id);
+                      }
+                    }}
+                    onUpdateItem={async (quantity) => {
+                      try {
+                        const res = await updateShoppingListItem(item.id, { quantity });
+                        handleItemUpdate(item.id, { ...item, quantity: res.data.quantity });
+                      } catch (err) {
+                        console.error('Failed to update shopping list item:', err);
+                        alert('Failed to update item quantity');
+                      }
+                    }}
+                    onDeleteItem={async () => {
+                      if (!window.confirm('Remove this item from the shopping list?')) return;
+                      try {
+                        await deleteShoppingListItem(item.id);
+                        handleItemDelete(item.id);
+                      } catch (err) {
+                        console.error('Failed to delete shopping list item:', err);
+                        alert('Failed to delete item');
+                      }
+                    }}
+                  />
                 );
               })}
           </div>
