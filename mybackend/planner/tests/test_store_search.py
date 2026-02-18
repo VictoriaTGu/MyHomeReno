@@ -10,9 +10,10 @@ from django.contrib.auth.models import User
 from rest_framework.test import APIClient
 from rest_framework.authtoken.models import Token
 from rest_framework import status
+from unittest.mock import patch, MagicMock
 
 from planner.models import ShoppingList, Material, ShoppingListItem
-from planner.store_search import DummyStoreSearchClient, get_store_client
+from planner.store_search import DummyStoreSearchClient, HomeDepotSearchClient, get_store_client
 
 
 class DummyStoreSearchClientTests(TestCase):
@@ -358,3 +359,173 @@ class EndToEndSearchAndAddTests(TestCase):
         self.assertEqual(material.product_title, selected_product['name'])
         self.assertEqual(material.product_url, selected_product['url'])
         self.assertEqual(material.product_image_url, selected_product['image_url'])
+
+
+class HomeDepotSearchClientTests(TestCase):
+    """Test the HomeDepotSearchClient with mocked SerpAPI responses."""
+    
+    def setUp(self):
+        """Set up test fixtures."""
+        from planner.tests.mock_serpapi_response import (
+            MOCK_HOMEDEPOT_RESPONSE,
+            MOCK_HOMEDEPOT_RESPONSE_INCOMPLETE,
+            MOCK_HOMEDEPOT_RESPONSE_ERROR
+        )
+        self.mock_response = MOCK_HOMEDEPOT_RESPONSE
+        self.mock_response_incomplete = MOCK_HOMEDEPOT_RESPONSE_INCOMPLETE
+        self.mock_response_error = MOCK_HOMEDEPOT_RESPONSE_ERROR
+        self.client = HomeDepotSearchClient()
+    
+    @patch('planner.store_search.requests.get')
+    @override_settings(
+        SERPAPI_API_KEY='***TEST_KEY***',
+        SERPAPI_BASE_URL='https://serpapi.com/search',
+        SERPAPI_DELIVERY_ZIP='04401',
+        SERPAPI_STORE_ID='2414'
+    )
+    def test_homedepot_search_with_mocked_response(self, mock_get):
+        """Test that HomeDepota search parses SerpAPI response correctly."""
+        # Mock the requests.get call
+        mock_response = MagicMock()
+        mock_response.json.return_value = self.mock_response
+        mock_get.return_value = mock_response
+        
+        # Perform search
+        results = self.client.search_products("cordless drill kit", limit=3)
+        
+        # Verify request was made correctly
+        mock_get.assert_called_once()
+        call_args = mock_get.call_args
+        self.assertEqual(call_args[0][0], 'https://serpapi.com/search')
+        self.assertEqual(call_args[1]['params']['q'], 'cordless drill kit')
+        self.assertEqual(call_args[1]['params']['engine'], 'home_depot')
+        
+        # Verify results
+        self.assertEqual(len(results), 3)
+        self.assertEqual(results[0]['store'], 'home_depot')
+        self.assertEqual(results[1]['store'], 'home_depot')
+        self.assertEqual(results[2]['store'], 'home_depot')
+    
+    @patch('planner.store_search.requests.get')
+    @override_settings(
+        SERPAPI_API_KEY='***TEST_KEY***',
+        SERPAPI_BASE_URL='https://serpapi.com/search',
+        SERPAPI_DELIVERY_ZIP='04401'
+    )
+    def test_homedepot_search_parses_all_fields_correctly(self, mock_get):
+        """Test that all fields are extracted and normalized correctly."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = self.mock_response
+        mock_get.return_value = mock_response
+        
+        results = self.client.search_products("cordless drill kit", limit=3)
+        
+        # Check first product fields
+        first_product = results[0]
+        self.assertEqual(
+            first_product['name'],
+            "DEWALT 20-Volt Compact Cordless Drill/Driver Kit with 1.3 Ah Battery & Charger"
+        )
+        self.assertEqual(first_product['price'], 98.97)
+        self.assertEqual(first_product['currency'], 'USD')
+        self.assertEqual(first_product['sku'], '205521897')
+        self.assertIn('homedepot.com', first_product['url'])
+        self.assertIn('homedepot-static.com', first_product['image_url'])
+        
+        # Check second product (different image URL pattern)
+        second_product = results[1]
+        self.assertEqual(second_product['price'], 89.99)
+        self.assertEqual(second_product['sku'], '205512345')
+    
+    @patch('planner.store_search.requests.get')
+    @override_settings(
+        SERPAPI_API_KEY='***TEST_KEY***',
+        SERPAPI_BASE_URL='https://serpapi.com/search',
+        SERPAPI_DELIVERY_ZIP='04401'
+    )
+    def test_homedepot_search_handles_api_error(self, mock_get):
+        """Test that API errors are handled gracefully."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = self.mock_response_error
+        mock_get.return_value = mock_response
+        
+        results = self.client.search_products("cordless drill kit")
+        
+        # Should return empty list on API error
+        self.assertEqual(results, [])
+    
+    @patch('planner.store_search.requests.get')
+    @override_settings(
+        SERPAPI_API_KEY='***TEST_KEY***',
+        SERPAPI_BASE_URL='https://serpapi.com/search',
+        SERPAPI_DELIVERY_ZIP='04401'
+    )
+    def test_homedepot_search_respects_limit(self, mock_get):
+        """Test that limit parameter is respected."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = self.mock_response
+        mock_get.return_value = mock_response
+        
+        # Request only 2 results even though API returns 3
+        results = self.client.search_products("cordless drill kit", limit=2)
+        
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results[0]['sku'], '205521897')
+        self.assertEqual(results[1]['sku'], '205512345')
+    
+    @patch('planner.store_search.requests.get')
+    @override_settings(
+        SERPAPI_API_KEY='***TEST_KEY***',
+        SERPAPI_BASE_URL='https://serpapi.com/search',
+        SERPAPI_DELIVERY_ZIP='04401'
+    )
+    def test_homedepot_search_handles_missing_fields(self, mock_get):
+        """Test that missing fields are handled gracefully."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = self.mock_response_incomplete
+        mock_get.return_value = mock_response
+        
+        results = self.client.search_products("test")
+        
+        # Should return results with safe defaults for missing fields
+        self.assertEqual(len(results), 2)
+        
+        # First product missing price, image, link
+        first = results[0]
+        self.assertEqual(first['name'], 'Drill Kit No Price')
+        self.assertEqual(first['price'], 0.0)
+        self.assertEqual(first['sku'], '')
+        self.assertEqual(first['image_url'], '')
+        self.assertEqual(first['url'], '')
+        
+        # Second product missing title
+        second = results[1]
+        self.assertEqual(second['name'], 'Unknown Product')
+        self.assertEqual(second['price'], 79.99)
+        self.assertEqual(second['sku'], '123456')
+    
+    @patch('planner.store_search.requests.get')
+    @override_settings(SERPAPI_API_KEY='')
+    def test_homedepot_search_without_api_key(self, mock_get):
+        """Test that search returns empty list if API key not configured."""
+        results = self.client.search_products("cordless drill")
+        
+        # Should not call API and return empty list
+        mock_get.assert_not_called()
+        self.assertEqual(results, [])
+    
+    @patch('planner.store_search.requests.get')
+    @override_settings(
+        SERPAPI_API_KEY='***TEST_KEY***',
+        SERPAPI_BASE_URL='https://serpapi.com/search',
+        SERPAPI_DELIVERY_ZIP='04401'
+    )
+    def test_homedepot_search_handles_network_error(self, mock_get):
+        """Test that network errors are handled gracefully."""
+        mock_get.side_effect = Exception("Network error")
+        
+        results = self.client.search_products("cordless drill")
+        
+        # Should return empty list on error
+        self.assertEqual(results, [])
+

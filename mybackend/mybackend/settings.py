@@ -202,3 +202,10 @@ STORE_SEARCH_USE_DUMMY = os.getenv('STORE_SEARCH_USE_DUMMY', 'True').lower() in 
 # Amazon API credentials (if not using dummy client)
 AMAZON_API_KEY = os.getenv('AMAZON_API_KEY', '')
 AMAZON_API_REGION = os.getenv('AMAZON_API_REGION', 'us-east-1')
+
+# SerpAPI credentials for Home Depot and other store searches
+# Get your API key at https://serpapi.com/
+SERPAPI_API_KEY = os.getenv('SERPAPI_API_KEY', '')
+SERPAPI_BASE_URL = 'https://serpapi.com/search'
+SERPAPI_DELIVERY_ZIP = os.getenv('SERPAPI_DELIVERY_ZIP', '02891')  # Default to Maine for testing
+SERPAPI_STORE_ID = os.getenv('SERPAPI_STORE_ID', '4284')  # Optional: specific Home Depot store

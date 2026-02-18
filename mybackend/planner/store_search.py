@@ -6,8 +6,10 @@ while hiding store-specific implementation details.
 """
 
 import logging
+import requests
 from typing import Protocol, List, TypedDict
 from abc import ABC, abstractmethod
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +75,113 @@ class AmazonSearchClient(StoreSearchClient):
             "url": "",
             "image_url": "",
             "store": "amazon"
+        }
+
+
+class HomeDepotSearchClient(StoreSearchClient):
+    """Home Depot product search client using SerpAPI."""
+    
+    def search_products(self, query: str, *, limit: int = 5) -> List[ProductResult]:
+        """Search Home Depot for products matching the query using SerpAPI.
+        
+        Args:
+            query: Search term (e.g., "cordless drill kit")
+            limit: Maximum number of results to return (default 5)
+            
+        Returns:
+            List of ProductResult dictionaries normalized from SerpAPI response
+        """
+        # Check API key configuration
+        api_key = settings.SERPAPI_API_KEY
+        if not api_key:
+            logger.warning("SERPAPI_API_KEY not configured; Home Depot search unavailable")
+            return []
+        
+        try:
+            # Build SerpAPI request parameters
+            params = {
+                'engine': 'home_depot',
+                'q': query,
+                'num': limit,
+                'api_key': api_key,
+                'delivery_zip': getattr(settings, 'SERPAPI_DELIVERY_ZIP', '04401'),
+            }
+            
+            store_id = getattr(settings, 'SERPAPI_STORE_ID', None)
+            if store_id:
+                params['store_id'] = store_id
+            
+            base_url = getattr(settings, 'SERPAPI_BASE_URL', 'https://serpapi.com/search')
+            
+            logger.info(f"Calling SerpAPI for Home Depot search: query='{query}' limit={limit}")
+            
+            # Make API request
+            response = requests.get(base_url, params=params, timeout=10)
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            # Handle API errors in response
+            if data.get('search_metadata', {}).get('status') != 'Success':
+                logger.warning(f"SerpAPI returned non-success status: {data.get('search_metadata', {}).get('status')}")
+                return []
+            
+            # Extract products from response
+            products = data.get('products', [])
+            logger.info(f"SerpAPI returned {len(products)} results for query '{query}'")
+            
+            # Transform to ProductResult format
+            results = []
+            for product in products[:limit]:
+                try:
+                    result = self._format_product(product)
+                    results.append(result)
+                except Exception as e:
+                    logger.warning(f"Failed to parse Home Depot product: {e}")
+                    continue
+            
+            return results
+            
+        except requests.exceptions.RequestException as e:
+            logger.exception(f"SerpAPI request failed for query '{query}': {e}")
+            return []
+        except Exception as e:
+            logger.exception(f"Unexpected error during Home Depot search: {e}")
+            return []
+    
+    def _format_product(self, product: dict) -> ProductResult:
+        """Convert SerpAPI Home Depot product to ProductResult format.
+        
+        Args:
+            product: Product dict from SerpAPI response
+            
+        Returns:
+            ProductResult with normalized fields
+            
+        Raises:
+            KeyError: If required fields are missing
+        """
+        # Extract primary image URL (use first thumbnail, first variant)
+        image_url = ""
+        thumbnails = product.get('thumbnails', [])
+        if thumbnails and len(thumbnails) > 0 and len(thumbnails[0]) > 0:
+            image_url = thumbnails[0][0]  # First variant, smallest size
+        
+        # Build product URL (use provided link or construct from product_id)
+        product_url = product.get('link', '')
+        if not product_url and product.get('product_id'):
+            # Fallback: construct URL from product_id if link not provided
+            product_url = f"https://apionline.homedepot.com/p/{product.get('product_id')}"
+        
+        return {
+            "name": product.get('title', 'Unknown Product'),
+            "description": product.get('description', ''),  # SerpAPI search doesn't provide full description
+            "price": float(product.get('price', 0.0)),
+            "currency": "USD",
+            "sku": str(product.get('product_id', '')),
+            "url": product_url,
+            "image_url": image_url,
+            "store": "home_depot"
         }
 
 
@@ -145,8 +254,7 @@ def get_store_client(store: str = "amazon", use_dummy: bool = False) -> StoreSea
     elif store.lower() in ["lowes", "lowe's"]:
         # TODO: Implement LowesSearchClient
         raise NotImplementedError(f"Store {store} not yet implemented")
-    elif store.lower() == "home_depot":
-        # TODO: Implement HomeDepotSearchClient
-        raise NotImplementedError(f"Store {store} not yet implemented")
+    elif store.lower() in ["home_depot", "homedepot"]:
+        return HomeDepotSearchClient()
     else:
         raise ValueError(f"Unknown store: {store}")

@@ -34,7 +34,7 @@ class StoreSearchViewSet(viewsets.ViewSet):
         
         Query Parameters:
             q (required): Search query string
-            store (optional): Store name (default: "amazon")
+            store (optional): Store name (default: "home_depot")
             limit (optional): Max number of results (default: 5)
         
         Returns:
@@ -49,7 +49,7 @@ class StoreSearchViewSet(viewsets.ViewSet):
             )
         
         # Get optional parameters
-        store = request.query_params.get('store', 'amazon').lower()
+        store = request.query_params.get('store', 'home_depot').lower()
         try:
             limit = int(request.query_params.get('limit', 5))
         except ValueError:

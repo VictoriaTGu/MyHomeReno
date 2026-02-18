@@ -103,7 +103,7 @@ export const addShoppingListItem = (listId, data) => {
 };
 
 // Store Product Search
-export const searchProducts = (query, store = 'amazon') => {
+export const searchProducts = (query, store = 'home_depot') => {
   return apiClient.get(API_ENDPOINTS.STORE_SEARCH, {
     params: { q: query, store: store }
   }).then((res) => ({
