@@ -12,4 +12,5 @@ export const API_ENDPOINTS = {
   USER_MATERIAL_UPDATE: (userId, materialId) => `/api/user-materials/${userId}/${materialId}/`,
   STORE_SEARCH: '/api/store-search/search/',
   LOGIN: '/api/auth/login/',
+  GENERATE_PLAN: '/api/generate-plan/',
 };

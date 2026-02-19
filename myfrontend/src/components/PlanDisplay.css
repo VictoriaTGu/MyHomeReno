@@ -1,0 +1,259 @@
+.plan-display {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border: 2px solid #4e7ba7;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 20px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #4e7ba7;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+
+.plan-header h2 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 24px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #7f8c8d;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #e74c3c;
+}
+
+.plan-error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.plan-section {
+  margin-bottom: 24px;
+}
+
+.plan-section h3 {
+  color: #2c3e50;
+  font-size: 18px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Materials List */
+.plan-materials-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.plan-material-item {
+  background: white;
+  border-left: 4px solid #3498db;
+  padding: 12px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.plan-material-item:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.material-info {
+  flex-grow: 1;
+}
+
+.material-name {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.material-quantity {
+  color: #7f8c8d;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.material-category {
+  color: #95a5a6;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.add-material-btn {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  margin-left: 12px;
+}
+
+.add-material-btn:hover:not(:disabled) {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+}
+
+.add-material-btn:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Tools List */
+.tools-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tool-item {
+  background: white;
+  border-left: 4px solid #27ae60;
+  padding: 12px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.tool-item:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tool-info {
+  flex-grow: 1;
+}
+
+.tool-name {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 16px;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.tool-quantity {
+  color: #7f8c8d;
+  font-size: 14px;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.tool-category {
+  color: #95a5a6;
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* Steps List */
+.plan-steps-list {
+  background: white;
+  padding: 20px;
+  border-radius: 6px;
+  color: #2c3e50;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.plan-steps-list li {
+  margin-bottom: 12px;
+  padding-left: 12px;
+  line-height: 1.6;
+}
+
+.plan-steps-list li:last-child {
+  margin-bottom: 0;
+}
+
+/* Warnings */
+.plan-warnings {
+  background: #fff3cd;
+  border-left: 4px solid #ff9800;
+}
+
+.plan-warnings h3 {
+  color: #d9534f;
+}
+
+.plan-warnings-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.plan-warnings-list li {
+  background: rgba(255, 152, 0, 0.1);
+  padding: 10px;
+  border-radius: 4px;
+  color: #7f5c1a;
+  margin-bottom: 8px;
+  border-left: 3px solid #ff9800;
+  line-height: 1.5;
+}
+
+.plan-warnings-list li:last-child {
+  margin-bottom: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .plan-display {
+    padding: 16px;
+  }
+
+  .plan-header h2 {
+    font-size: 20px;
+  }
+
+  .plan-material-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .add-material-btn {
+    margin-left: 0;
+    margin-top: 8px;
+    width: 100%;
+  }
+
+  .plan-tools-list {
+    grid-template-columns: 1fr;
+  }
+}

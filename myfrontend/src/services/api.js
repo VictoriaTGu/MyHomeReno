@@ -112,6 +112,16 @@ export const searchProducts = (query, store = 'home_depot') => {
   }));
 };
 
+// Plan Generation (Phase 3)
+export const generatePlan = (description) => {
+  return apiClient.post(API_ENDPOINTS.GENERATE_PLAN, {
+    description: description
+  }).then((res) => ({
+    ...res,
+    data: res.data,
+  }));
+};
+
 export const updateShoppingListItem = (itemId, data) => {
   return apiClient.patch(API_ENDPOINTS.SHOPPING_LIST_ITEM_DETAIL(itemId), data).then((res) => ({
     ...res,

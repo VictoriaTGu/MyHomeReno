@@ -13,9 +13,10 @@ from .models import Project, Material, ShoppingList, ShoppingListItem, UserMater
 from .serializers import (
     ProjectSerializer, MaterialSerializer, ProjectMaterialSerializer,
     ShoppingListSerializer, ShoppingListCreateSerializer, ShoppingListItemSerializer,
-    UserMaterialSerializer, ProductResultSerializer
+    UserMaterialSerializer, ProductResultSerializer, PlanRequestSerializer, PlanResponseSerializer
 )
 from .store_search import get_store_client
+from .rag_search import generate_plan
 
 
 class StoreSearchViewSet(viewsets.ViewSet):
@@ -452,3 +453,50 @@ class UserMaterialViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(user_material)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+
+class PlanGenerationView(APIView):
+    """
+    API endpoint for generating structured project plans from free-form descriptions.
+    
+    POST: Generate a project plan
+        Request: { "description": "project description" }
+        Response: { "materials": [...], "tools": [...], "steps": [...], "warnings": [...] }
+    """
+    permission_classes = [IsAuthenticated]
+    
+    logger = logging.getLogger(__name__)
+
+    def post(self, request):
+        """
+        Generate a structured project plan from a free-form user description.
+        
+        The plan includes materials, tools, steps, and safety warnings generated
+        using RAG (Retrieval-Augmented Generation) from OpenAI and ChromaDB.
+        """
+        # Validate request
+        serializer = PlanRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        description = serializer.validated_data['description']
+        
+        try:
+            # Generate the plan using RAG
+            self.logger.info(f"Generating plan for user {request.user.id}: {description[:50]}...")
+            plan = generate_plan(description)
+            
+            # Validate the response structure
+            response_serializer = PlanResponseSerializer(plan)
+            return Response(response_serializer.data, status=status.HTTP_200_OK)
+            
+        except ValueError as e:
+            self.logger.warning(f"Invalid plan request from user {request.user.id}: {str(e)}")
+            return Response(
+                {'detail': 'Failed to parse plan response. Please try again.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            self.logger.exception(f"Error generating plan for user {request.user.id}: {str(e)}")
+            return Response(
+                {'detail': 'Error generating plan. Please ensure OpenAI API is configured and vector store is populated.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

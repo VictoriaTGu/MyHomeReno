@@ -252,3 +252,102 @@
 .delete-btn:hover {
   background: #c82333;
 }
+/* Plan Generation Section - Phase 3 */
+.plan-generation-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+  color: white;
+}
+
+.plan-generation-section h2 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 22px;
+}
+
+.section-desc {
+  margin: 0 0 16px;
+  opacity: 0.95;
+  font-size: 14px;
+}
+
+.plan-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.plan-description-input {
+  padding: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+  resize: vertical;
+  transition: all 0.2s ease;
+}
+
+.plan-description-input:focus {
+  outline: none;
+  border-color: white;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+}
+
+.plan-description-input:disabled {
+  background: rgba(255, 255, 255, 0.5);
+  color: #999;
+  cursor: not-allowed;
+}
+
+.generate-plan-btn {
+  background: white;
+  color: #667eea;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+}
+
+.generate-plan-btn:hover:not(:disabled) {
+  background: #f8f9ff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.generate-plan-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.plan-error-message {
+  background: rgba(220, 53, 69, 0.2);
+  border: 1px solid rgba(220, 53, 69, 0.4);
+  color: white;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .plan-generation-section {
+    padding: 16px;
+  }
+
+  .plan-input-group {
+    gap: 10px;
+  }
+
+  .plan-description-input {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}

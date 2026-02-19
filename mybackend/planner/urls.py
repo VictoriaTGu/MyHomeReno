@@ -2,7 +2,8 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     ProjectViewSet, MaterialViewSet, ShoppingListViewSet,
-    ShoppingListItemViewSet, UserMaterialViewSet, StoreSearchViewSet, LoginView
+    ShoppingListItemViewSet, UserMaterialViewSet, StoreSearchViewSet, LoginView,
+    PlanGenerationView
 )
 
 router = DefaultRouter()
@@ -51,4 +52,6 @@ urlpatterns = [
     path('user-materials/<int:user_id>/', include(user_materials_router.urls)),
     # Simple auth
     path('auth/login/', LoginView.as_view(), name='api-login'),
+    # Phase 3: Plan generation endpoint
+    path('generate-plan/', PlanGenerationView.as_view(), name='generate-plan'),
 ]

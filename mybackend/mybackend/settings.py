@@ -209,3 +209,14 @@ SERPAPI_API_KEY = os.getenv('SERPAPI_API_KEY', '')
 SERPAPI_BASE_URL = 'https://serpapi.com/search'
 SERPAPI_DELIVERY_ZIP = os.getenv('SERPAPI_DELIVERY_ZIP', '02891')  # Default to Maine for testing
 SERPAPI_STORE_ID = os.getenv('SERPAPI_STORE_ID', '4284')  # Optional: specific Home Depot store
+
+# Phase 3: RAG (Retrieval-Augmented Generation) Configuration
+# OpenAI API Key - required for RAG plan generation
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
+
+# RAG Model Configuration
+RAG_MODEL = os.getenv('RAG_MODEL', 'gpt-3.5-turbo')  # LLM model for plan generation
+RAG_EMBEDDING_MODEL = os.getenv('RAG_EMBEDDING_MODEL', 'text-embedding-3-small')  # Embedding model
+
+# ChromaDB Vector Store Persistence
+CHROMA_PERSIST_DIR = os.getenv('CHROMA_PERSIST_DIR', 'chroma_db')

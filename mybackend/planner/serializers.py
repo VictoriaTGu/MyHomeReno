@@ -144,3 +144,35 @@ class ProductResultSerializer(serializers.Serializer):
     url = serializers.URLField()
     image_url = serializers.URLField()
     store = serializers.CharField()
+
+class PlanRequestSerializer(serializers.Serializer):
+    """Serializer for validating plan generation requests."""
+    description = serializers.CharField(
+        max_length=2000,
+        min_length=10,
+        help_text="Free-form description of the project (10-2000 characters)"
+    )
+
+
+class PlanMaterialSerializer(serializers.Serializer):
+    """Serializer for individual materials in a plan."""
+    name = serializers.CharField()
+    quantity = serializers.FloatField()
+    unit = serializers.CharField()
+    category = serializers.CharField()
+
+
+class PlanToolSerializer(serializers.Serializer):
+    """Serializer for individual tools in a plan."""
+    name = serializers.CharField()
+    quantity = serializers.FloatField()
+    unit = serializers.CharField()
+    category = serializers.CharField()
+
+
+class PlanResponseSerializer(serializers.Serializer):
+    """Serializer for structured plan generation response."""
+    materials = PlanMaterialSerializer(many=True)
+    tools = PlanToolSerializer(many=True)
+    steps = serializers.ListField(child=serializers.CharField())
+    warnings = serializers.ListField(child=serializers.CharField())
