@@ -54,6 +54,7 @@ export default function ProjectSelection({ projects, shoppingLists, onSelectProj
           );
         })}
       </div>
+      {/* AI plan results and Start Project button will be integrated in ProjectSelectionPage, not here */}
     </div>
   );
 }

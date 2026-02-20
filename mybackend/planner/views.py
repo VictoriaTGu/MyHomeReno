@@ -127,13 +127,85 @@ class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
 
-    @action(detail=True, methods=['get'])
+    def create(self, request, *args, **kwargs):
+        logger = logging.getLogger(__name__)
+        logger.info("[ProjectViewSet.create] Incoming request data: %s", request.data)
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
+            logger.warning("[ProjectViewSet.create] Validation error: %s | Data: %s", e, request.data)
+            raise
+        logger.info("[ProjectViewSet.create] Serializer validated data: %s", serializer.validated_data)
+        project = serializer.save()
+        project_materials = getattr(project, '_created_project_materials', [])
+        project_data = ProjectSerializer(project).data
+        project_materials_data = ProjectMaterialSerializer(project_materials, many=True).data
+        logger.info("[ProjectViewSet.create] Created project: %s", project_data)
+        logger.info("[ProjectViewSet.create] Created project materials: %s", project_materials_data)
+        return Response({
+            'project': project_data,
+            'project_materials': project_materials_data
+        }, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['get', 'post'], permission_classes=[IsAuthenticated])
     def default_materials(self, request, pk=None):
-        """Get default materials for a specific project."""
+        """
+        GET: Get default materials for a specific project.
+        POST: Add one or more default materials to a project.
+             Can accept existing material_ids or material data to create new materials.
+        """
         project = self.get_object()
-        materials = project.materials.all()
-        serializer = ProjectMaterialSerializer(materials, many=True)
-        return Response(serializer.data)
+        
+        if request.method == 'GET':
+            materials = project.materials.all()
+            serializer = ProjectMaterialSerializer(materials, many=True)
+            return Response(serializer.data)
+        
+        elif request.method == 'POST':
+            # Validate input
+            from .serializers import AddProjectMaterialsSerializer
+            serializer = AddProjectMaterialsSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            materials_data = serializer.validated_data['materials']
+            added_materials = []
+            
+            # Bulk create or update ProjectMaterial entries
+            for item in materials_data:
+                quantity = item['quantity']
+                
+                # Handle existing material by ID
+                if item.get('material_id'):
+                    material_id = item['material_id']
+                    material = Material.objects.get(id=material_id)
+                # Create new material from provided data
+                else:
+                    material, created = Material.objects.get_or_create(
+                        name=item['name'],
+                        category=item['category'],
+                        unit=item['unit'],
+                        defaults={
+                            'store': item.get('store'),
+                            'notes': item.get('notes')
+                        }
+                    )
+                
+                # Create or update ProjectMaterial entry
+                project_material, _ = ProjectMaterial.objects.update_or_create(
+                    project=project,
+                    material=material,
+                    defaults={'quantity': quantity}
+                )
+                added_materials.append(project_material)
+            
+            # Return the created/updated materials
+            response_serializer = ProjectMaterialSerializer(added_materials, many=True)
+            return Response({
+                'project_id': project.id,
+                'added_count': len(added_materials),
+                'materials': response_serializer.data
+            }, status=201)
 
 
 class MaterialViewSet(viewsets.ReadOnlyModelViewSet):
@@ -166,45 +238,26 @@ class ShoppingListViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """Create with detailed logging to help debug BadRequest issues."""
+        logger = logging.getLogger(__name__)
         try:
-            # Record basic context (avoid logging sensitive tokens)
+            # Log request body
+            logger.info("[ShoppingListViewSet.create] Incoming request data: %s", request.data)
             auth_present = bool(request.META.get('HTTP_AUTHORIZATION'))
-            self.logger.info(
-                "ShoppingList create requested: user=%s auth_present=%s data=%s",
-                getattr(request.user, 'id', None),
-                auth_present,
-                request.data,
-            )
+            logger.info("[ShoppingListViewSet.create] user=%s auth_present=%s", getattr(request.user, 'id', None), auth_present)
 
-            # Use serializer for validation and detailed errors
             serializer = self.get_serializer(data=request.data)
             if not serializer.is_valid():
-                # Log validation errors and return
-                self.logger.warning(
-                    "ShoppingList create validation failed: user=%s errors=%s data=%s",
-                    getattr(request.user, 'id', None),
-                    serializer.errors,
-                    request.data,
-                )
+                logger.warning("[ShoppingListViewSet.create] Validation error: %s | Data: %s", serializer.errors, request.data)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-            # Save with the authenticated user
             self.perform_create(serializer)
             headers = self.get_success_headers(serializer.data)
-            self.logger.debug(
-                "ShoppingList created: user=%s shopping_list_id=%s",
-                getattr(request.user, 'id', None),
-                serializer.data.get('id')
-            )
+            logger.info("[ShoppingListViewSet.create] Response data: %s", serializer.data)
+            logger.debug("[ShoppingListViewSet.create] ShoppingList created: user=%s shopping_list_id=%s", getattr(request.user, 'id', None), serializer.data.get('id'))
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
         except Exception as exc:
-            # Log exception with stack trace for diagnostics
-            self.logger.exception(
-                "Unexpected error creating ShoppingList for user=%s data=%s",
-                getattr(request.user, 'id', None),
-                request.data,
-            )
+            logger.exception("[ShoppingListViewSet.create] Unexpected error for user=%s data=%s", getattr(request.user, 'id', None), request.data)
             return Response({'detail': 'Internal server error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])

@@ -98,8 +98,14 @@ We want clear, simple REST endpoints that React can call:
 
 - `GET /api/projects/`
   - Returns a list of projects (id, name, description, url).
+- `POST /api/projects/`
+  - Create a project (name, description, url), and optionally
+  pass in `Material` dicts to create `Material`s and create the
+  associated `ProjectMaterial`s and return the new project serialized, including the id.
 - `GET /api/projects/{id}/default-materials/`
   - Returns a list of default materials from `ProjectMaterial`.
+- `POST /api/projects/{id}/default-materials/`
+  - Adds one or more default materials from `ProjectMaterial`.
 
 ### Users and materials they might already have
 

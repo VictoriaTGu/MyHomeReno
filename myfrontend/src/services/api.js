@@ -58,6 +58,14 @@ export const getProjects = () => {
   }));
 };
 
+// Create Project (Phase 3)
+export const createProject = (data) => {
+  return apiClient.post(API_ENDPOINTS.PROJECTS, data).then((res) => ({
+    ...res,
+    data: res.data,
+  }));
+};
+
 export const getProjectDefaultMaterials = (projectId) => {
   return apiClient.get(API_ENDPOINTS.PROJECT_MATERIALS(projectId)).then((res) => ({
     ...res,

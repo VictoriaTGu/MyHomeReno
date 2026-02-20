@@ -1,12 +1,98 @@
+
+import logging
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Project, Material, ProjectMaterial, ShoppingList, ShoppingListItem, UserMaterial
 
+logger = logging.getLogger(__name__)
+
+
+
+class ProjectMaterialInputSerializer(serializers.Serializer):
+    """Serializer for accepting material_id/quantity or material data in bulk add request."""
+    # Either existing material_id or new material data
+    material_id = serializers.IntegerField(required=False, allow_null=True)
+    quantity = serializers.DecimalField(max_digits=10, decimal_places=2)
+    # For creating new materials
+    name = serializers.CharField(required=False, allow_blank=False)
+    category = serializers.CharField(required=False, allow_blank=False)
+    unit = serializers.CharField(required=False, allow_blank=False)
+    store = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    notes = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+    def validate(self, data):
+        logger.info("ProjectMaterialInputSerializer.validate called with data: %s", data)
+        material_id = data.get('material_id')
+        name = data.get('name')
+        category = data.get('category')
+        unit = data.get('unit')
+        # Must have either material_id or name/category/unit for new material
+        if not material_id and not (name and category and unit):
+            logger.warning("Validation failed: must provide either material_id or name/category/unit for new material. Data: %s", data)
+            raise serializers.ValidationError(
+                "Either provide 'material_id' for existing material, or 'name', 'category', and 'unit' to create a new material."
+            )
+        # Cannot provide both
+        if material_id and name:
+            logger.warning("Validation failed: cannot provide both material_id and name. Data: %s", data)
+            raise serializers.ValidationError(
+                "Cannot provide both 'material_id' and material creation data. Choose one approach."
+            )
+        return data
+
+    def validate_material_id(self, value):
+        logger.info("Validating material_id: %s", value)
+        if value is not None and not Material.objects.filter(id=value).exists():
+            logger.warning("Material with id %s does not exist", value)
+            raise serializers.ValidationError(f"Material with id {value} does not exist.")
+        return value
+
+    def validate_quantity(self, value):
+        logger.info("Validating quantity: %s", value)
+        if value <= 0:
+            logger.warning("Validation failed: quantity must be positive. Value: %s", value)
+            raise serializers.ValidationError("Quantity must be greater than zero.")
+        return value
+
 
 class ProjectSerializer(serializers.ModelSerializer):
+    materials = ProjectMaterialInputSerializer(many=True, write_only=True)
     class Meta:
         model = Project
-        fields = ['id', 'name', 'description', 'img']
+        fields = ['id', 'name', 'description', 'img', 'materials']
+
+    def create(self, validated_data):
+        logger.info("ProjectSerializer.create called with validated_data: %s", validated_data)
+        materials_data = validated_data.pop('materials', [])
+        project = Project.objects.create(**validated_data)
+        created_project_materials = []
+        for item in materials_data:
+            logger.info("Processing material item: %s", item)
+            quantity = item['quantity']
+            if item.get('material_id'):
+                material = Material.objects.get(id=item['material_id'])
+                logger.info("Using existing Material id=%s", item['material_id'])
+            else:
+                material, created = Material.objects.get_or_create(
+                    name=item['name'],
+                    category=item['category'],
+                    unit=item['unit'],
+                    defaults={
+                        'store': item.get('store'),
+                        'notes': item.get('notes')
+                    }
+                )
+                logger.info("Material get_or_create: %s (created=%s)", material, created)
+            project_material, created_pm = ProjectMaterial.objects.get_or_create(
+                project=project,
+                material=material,
+                defaults={'quantity': quantity}
+            )
+            logger.info("ProjectMaterial get_or_create: %s (created=%s)", project_material, created_pm)
+            created_project_materials.append(project_material)
+        project._created_project_materials = created_project_materials
+        logger.info("Project created: %s with materials: %s", project, created_project_materials)
+        return project
 
 
 class MaterialSerializer(serializers.ModelSerializer):
@@ -22,6 +108,16 @@ class ProjectMaterialSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectMaterial
         fields = ['id', 'material', 'quantity']
+
+
+class AddProjectMaterialsSerializer(serializers.Serializer):
+    """Serializer for POST request to add multiple materials to a project."""
+
+    def validate_materials(self, value):
+        """Ensure at least one material is provided."""
+        if not value:
+            raise serializers.ValidationError("At least one material must be provided.")
+        return value
 
 
 class ShoppingListItemSerializer(serializers.ModelSerializer):

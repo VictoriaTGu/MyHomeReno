@@ -26,3 +26,6 @@ dist-ssr
 *.pyc
 .venv/
 *.env
+mybackend/planner/chroma_db/
+mybackend/chroma_db/
+mybackend/db.sqlite3

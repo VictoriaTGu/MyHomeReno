@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AddItemForm from './AddItemForm';
-import PlanDisplay from './PlanDisplay';
-import { getShoppingList, getUserMaterials, createUserMaterial, updateUserMaterial, deleteUserMaterial, updateShoppingListItem, deleteShoppingListItem, generatePlan, addShoppingListItem } from '../services/api';
+import { getShoppingList, getUserMaterials, createUserMaterial, updateUserMaterial, deleteUserMaterial, updateShoppingListItem, deleteShoppingListItem, addShoppingListItem } from '../services/api';
 import './ShoppingList.css';
 
 function SimpleRow({ item, isOwned, onMarkOwned, onUpdateItem, onDeleteItem }) {
@@ -60,10 +59,6 @@ export default function ShoppingList({ listId, userId, onBack }) {
   const [userMaterials, setUserMaterials] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [plan, setPlan] = useState(null);
-  const [planDescription, setPlanDescription] = useState('');
-  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
-  const [planError, setPlanError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -151,57 +146,6 @@ export default function ShoppingList({ listId, userId, onBack }) {
     }
   };
 
-  const handleUpdateUserMaterial = async (materialId, quantity) => {
-    try {
-      const res = await updateUserMaterial(userId, materialId, { quantity });
-      setUserMaterials((prev) => ({ ...prev, [materialId]: res.data }));
-    } catch (err) {
-      console.error('Failed to update user material:', err);
-      alert('Failed to update quantity');
-    }
-  };
-
-  const handleGeneratePlan = async () => {
-    if (!planDescription.trim()) {
-      setPlanError('Please describe your project.');
-      return;
-    }
-
-    setIsGeneratingPlan(true);
-    setPlanError(null);
-    try {
-      const res = await generatePlan(planDescription);
-      setPlan(res.data);
-      setPlanDescription('');
-    } catch (err) {
-      console.error('Failed to generate plan:', err);
-      setPlanError(err.response?.data?.detail || 'Failed to generate plan. Make sure OpenAI API is configured.');
-    } finally {
-      setIsGeneratingPlan(false);
-    }
-  };
-
-  const handleAddMaterialFromPlan = async (material) => {
-    try {
-      const materialData = {
-        name: material.name,
-        category: material.category,
-        unit: material.unit,
-        store: 'unknown',
-      };
-      
-      const res = await addShoppingListItem(listId, {
-        quantity: material.quantity,
-        material_data: materialData,
-      });
-      
-      handleItemAdded(res.data);
-    } catch (err) {
-      console.error('Failed to add material from plan:', err);
-      alert(`Failed to add ${material.name} to shopping list`);
-    }
-  };
-
   if (isLoading) {
     return <div className="shopping-list loading">Loading shopping list...</div>;
   }
@@ -228,40 +172,6 @@ export default function ShoppingList({ listId, userId, onBack }) {
         <h1>{list.name}</h1>
         <p className="meta">Created: {new Date(list.created_at).toLocaleDateString()}</p>
       </div>
-
-      {/* Plan Generation Section - Phase 3 */}
-      <div className="plan-generation-section">
-        <h2>✨ Generate a Project Plan</h2>
-        <p className="section-desc">Describe a project and we'll create a detailed plan with materials, tools, and steps.</p>
-        <div className="plan-input-group">
-          <textarea
-            className="plan-description-input"
-            placeholder="e.g., Replace ½ inch copper pipe leaking under kitchen sink with PEX"
-            value={planDescription}
-            onChange={(e) => setPlanDescription(e.target.value)}
-            rows="3"
-            disabled={isGeneratingPlan}
-          />
-          <button
-            className="generate-plan-btn"
-            onClick={handleGeneratePlan}
-            disabled={isGeneratingPlan || !planDescription.trim()}
-          >
-            {isGeneratingPlan ? 'Generating...' : 'Generate Plan'}
-          </button>
-        </div>
-        {planError && <div className="plan-error-message">{planError}</div>}
-      </div>
-
-      {/* Display Generated Plan */}
-      {plan && (
-        <PlanDisplay
-          plan={plan}
-          listId={listId}
-          onItemAdded={handleItemAdded}
-          onClose={() => setPlan(null)}
-        />
-      )}
 
       {list.items && list.items.length > 0 ? (
         <>

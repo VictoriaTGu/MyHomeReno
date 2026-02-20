@@ -19,13 +19,6 @@ export default function PlanDisplay({ plan, onAddMaterial, isAddingMaterial }) {
                   </span>
                   <span className="material-category">({material.category})</span>
                 </div>
-                <button
-                  className="add-material-btn"
-                  onClick={() => onAddMaterial(material)}
-                  disabled={isAddingMaterial}
-                >
-                  {isAddingMaterial ? 'Adding...' : 'Add to List'}
-                </button>
               </div>
             ))}
           </div>
