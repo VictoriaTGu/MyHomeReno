@@ -36,7 +36,6 @@ body {
 }
 .product-info {
   flex: 1;
-  background: #fff;
   border-radius: 0 7px 10px 7px;
   display: flex;
   flex-direction: column;
@@ -91,7 +90,7 @@ body {
 }
 .product-price span {
   font-family: 'Suranna', serif;
-  font-size: 34px;
+  font-size: 28px;
   color: #474747;
   margin-right: 4px;
 }

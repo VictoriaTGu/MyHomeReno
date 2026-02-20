@@ -161,17 +161,19 @@ class HomeDepotSearchClient(StoreSearchClient):
         Raises:
             KeyError: If required fields are missing
         """
-        # Extract primary image URL (use first thumbnail, first variant)
+        # Extract primary image URL (use fourth thumbnail in the list)
         image_url = ""
         thumbnails = product.get('thumbnails', [])
-        if thumbnails and len(thumbnails) > 0 and len(thumbnails[0]) > 0:
-            image_url = thumbnails[0][0]  # First variant, smallest size
+        if thumbnails and len(thumbnails) > 0 and len(thumbnails[0]) > 3:
+            image_url = thumbnails[0][3] # 4th thumbnail
+        elif thumbnails and len(thumbnails) > 0 and len(thumbnails[0]) > 0:
+            image_url = thumbnails[0][0] # Fallback to first thumbnail
         
         # Build product URL (use provided link or construct from product_id)
         product_url = product.get('link', '')
         if not product_url and product.get('product_id'):
             # Fallback: construct URL from product_id if link not provided
-            product_url = f"https://apionline.homedepot.com/p/{product.get('product_id')}"
+            product_url = f"https://homedepot.com/p/{product.get('product_id')}"
         
         return {
             "name": product.get('title', 'Unknown Product'),

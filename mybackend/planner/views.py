@@ -224,11 +224,16 @@ class MaterialViewSet(viewsets.ReadOnlyModelViewSet):
         material = self.get_object()
         logger = logging.getLogger(__name__)
         logger.info("[MaterialViewSet.store_mapping] Updating material %s with data: %s", material.id, request.data)
-        
-        serializer = self.get_serializer(material, data=request.data, partial=True)
+
+        from .utils import fix_homedepot_url
+        data = request.data.copy()
+        if 'product_url' in data:
+            data['product_url'] = fix_homedepot_url(data['product_url'])
+
+        serializer = self.get_serializer(material, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        
+
         logger.info("[MaterialViewSet.store_mapping] Material %s updated: %s", material.id, serializer.data)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

@@ -20,7 +20,7 @@ export default function ItemDetailsPanel({ material, onClose }) {
             )}
           </div>
           <div className="product-price">
-            <p><span>{material.price}</span>$</p>
+            <p>$<span>{material.price}</span></p>
           </div>
         </div>
         <button className="close-btn" onClick={onClose}>&times;</button>

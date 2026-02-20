@@ -99,6 +99,26 @@ class StoreSearchAPITests(TestCase):
             self.assertEqual(material.product_title, "1/2\" Copper Pipe, 10 ft")
             self.assertEqual(material.product_url, "https://www.amazon.com/dp/B00COPPER123")
             self.assertEqual(material.product_image_url, "https://images.amazon.com/small/B00COPPER123.jpg")
+        def test_patch_material_store_mapping_fixes_homedepot_url(self):
+            """Test PATCH /api/materials/<id>/store-mapping/ fixes Home Depot apionline URL."""
+            material = Material.objects.create(name="Tile Adhesive", category="adhesive", unit="gallon")
+            url = f"/api/materials/{material.id}/store-mapping/"
+            patch_data = {
+                "store": "home_depot",
+                "sku": "100015587",
+                "product_title": "AcrylPro 1 Gal. Tile Adhesive",
+                "product_url": "https://apionline.homedepot.com/p/Custom-Building-Products-AcrylPro-1-Gal-4-qt-Tile-Stone-72-Hr-Dry-Time-Tile-Professional-Tile-Adhesive-ARL40001/100015587",
+                "product_image_url": "https://images.homedepot-static.com/product.jpg",
+                "price": 19.99,
+                "unit": "gallon"
+            }
+            response = self.client.patch(url, patch_data, format="json")
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            material.refresh_from_db()
+            self.assertEqual(
+                material.product_url,
+                "https://homedepot.com/p/Custom-Building-Products-AcrylPro-1-Gal-4-qt-Tile-Stone-72-Hr-Dry-Time-Tile-Professional-Tile-Adhesive-ARL40001/100015587"
+            )
     """Test the store search API endpoint."""
     
     def setUp(self):
@@ -463,12 +483,19 @@ class HomeDepotSearchClientTests(TestCase):
         self.assertEqual(first_product['currency'], 'USD')
         self.assertEqual(first_product['sku'], '205521897')
         self.assertIn('homedepot.com', first_product['url'])
-        self.assertIn('homedepot-static.com', first_product['image_url'])
-        
-        # Check second product (different image URL pattern)
+        # Should use the fourth thumbnail (index 3)
+        self.assertEqual(
+            first_product['image_url'],
+            "https://images.homedepot-static.com/productImages/abcd1234/abcd1234_l.jpg"
+        )
+        # Check second product (only one thumbnail, should use that)
         second_product = results[1]
         self.assertEqual(second_product['price'], 89.99)
         self.assertEqual(second_product['sku'], '205512345')
+        self.assertEqual(
+            second_product['image_url'],
+            "https://images.homedepot-static.com/productImages/efgh5678/efgh5678_s.jpg"
+        )
     
     @patch('planner.store_search.requests.get')
     @override_settings(
