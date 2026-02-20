@@ -215,6 +215,23 @@ class MaterialViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Material.objects.all()
     serializer_class = MaterialSerializer
 
+    @action(detail=True, methods=['patch'], permission_classes=[IsAuthenticated])
+    def store_mapping(self, request, pk=None):
+        """
+        PATCH /api/materials/{id}/store-mapping/
+        Update a material with store mapping data (store, sku, product_title, product_url, product_image_url).
+        """
+        material = self.get_object()
+        logger = logging.getLogger(__name__)
+        logger.info("[MaterialViewSet.store_mapping] Updating material %s with data: %s", material.id, request.data)
+        
+        serializer = self.get_serializer(material, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        
+        logger.info("[MaterialViewSet.store_mapping] Material %s updated: %s", material.id, serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class ShoppingListViewSet(viewsets.ModelViewSet):
     """ViewSet for managing shopping lists (strict auth)."""

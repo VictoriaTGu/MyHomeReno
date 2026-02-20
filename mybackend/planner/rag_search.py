@@ -56,30 +56,31 @@ def generate_plan(description: str) -> dict:
         
         # Create prompt for structured plan generation
         prompt = PromptTemplate.from_template(
-            """You are an expert DIY home renovation assistant. Based on the following context and the user's project description, 
-generate a detailed structured project plan.
+            """You are an expert DIY home renovation assistant. Based on the following context only and the user's project description, 
+            generate a detailed structured project plan. If not much relevant information is found in the context, provide a disclaimer 
+            in the warnings section and generate a basic plan based on general knowledge.
 
-IMPORTANT: You MUST return ONLY valid JSON (no markdown, no extra text) with this exact structure:
-{{
-    "materials": [
-        {{"name": "item name", "quantity": 2, "unit": "piece", "category": "pipe/fitting/other"}},
-        ...
-    ],
-    "tools": [
-        {{"name": "item name", "quantity": 1, "unit": "piece", "category": "tool"}},
-        ...
-    ],
-    "steps": ["Step 1: description", "Step 2: description", ...],
-    "warnings": ["Safety warning 1", "Caution: warning 2", ...]
-}}
+            IMPORTANT: You MUST return ONLY valid JSON (no markdown, no extra text) with this exact structure:
+            {{
+                "materials": [
+                    {{"name": "item name", "quantity": 2, "unit": "piece", "category": "pipe/fitting/other"}},
+                    ...
+                ],
+                "tools": [
+                    {{"name": "item name", "quantity": 1, "unit": "piece", "category": "tool"}},
+                    ...
+                ],
+                "steps": ["Step 1: description", "Step 2: description", ...],
+                "warnings": ["Safety warning 1", "Caution: warning 2", ...]
+            }}
 
-Context from knowledge base:
-{context}
+            Context from knowledge base:
+            {context}
 
-User's Project Description:
-{description}
+            User's Project Description:
+            {description}
 
-Generate the plan as valid JSON only:"""
+            Generate the plan as valid JSON only:"""
         )
         
         llm = ChatOpenAI(model_name=get_rag_llm(), temperature=0)

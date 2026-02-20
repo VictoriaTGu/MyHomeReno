@@ -8,6 +8,8 @@ export const API_ENDPOINTS = {
   SHOPPING_LISTS_USER: '/api/shopping-lists/user/',
   SHOPPING_LIST_ITEMS: (id) => `/api/shopping-lists/${id}/items/`,
   SHOPPING_LIST_ITEM_DETAIL: (itemId) => `/api/shopping-list-items/${itemId}/`,
+  MATERIALS: '/api/materials/',
+  MATERIAL_STORE_MAPPING: (materialId) => `/api/materials/${materialId}/store-mapping/`,
   USER_MATERIALS: (userId) => `/api/user-materials/${userId}/`,
   USER_MATERIAL_UPDATE: (userId, materialId) => `/api/user-materials/${userId}/${materialId}/`,
   STORE_SEARCH: '/api/store-search/search/',

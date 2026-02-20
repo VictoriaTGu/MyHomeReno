@@ -42,6 +42,9 @@ urlpatterns = [
         'get': 'retrieve'
     }), name='shopping-list-item-detail'),
 
+    # Material store mapping PATCH endpoint
+    path('materials/<int:pk>/store-mapping/', MaterialViewSet.as_view({'patch': 'store_mapping'}), name='material-store-mapping'),
+
     # User material update (flat route for PATCH/DELETE) - MUST be before the nested router
     path('user-materials/<int:user_id>/<int:material_id>/', UserMaterialViewSet.as_view({
         'patch': 'partial_update',

@@ -173,6 +173,14 @@ export const deleteUserMaterial = (userId, materialId) => {
   }));
 };
 
+// Materials
+export const updateMaterialStoreMapping = (materialId, data) => {
+  return apiClient.patch(API_ENDPOINTS.MATERIAL_STORE_MAPPING(materialId), data).then((res) => ({
+    ...res,
+    data: res.data,
+  }));
+};
+
 // Error handler utility
 export const handleApiError = (error) => {
   if (error.response) {

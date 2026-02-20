@@ -1,27 +1,63 @@
 import React, { useState, useEffect } from 'react';
+import ItemDetailsPanel from './ItemDetailsPanel';
 import AddItemForm from './AddItemForm';
+import ProductSearchModal from './ProductSearchModal';
 import { getShoppingList, getUserMaterials, createUserMaterial, updateUserMaterial, deleteUserMaterial, updateShoppingListItem, deleteShoppingListItem, addShoppingListItem } from '../services/api';
 import './ShoppingList.css';
 
-function SimpleRow({ item, isOwned, onMarkOwned, onUpdateItem, onDeleteItem }) {
+function SimpleRow({ item, isOwned, onMarkOwned, onUpdateItem, onDeleteItem, onSearchProducts, isDetailsOpen, onOpenDetails, onCloseDetails }) {
   const [qty, setQty] = useState(item.quantity);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleSave = async () => {
-    if (qty === item.quantity) return;
-    setSaving(true);
-    try {
-      await onUpdateItem(qty);
-    } finally {
-      setSaving(false);
+  // Autosave on quantity change
+  useEffect(() => {
+    if (qty !== item.quantity) {
+      setSaving(true);
+      setError(null);
+      onUpdateItem(qty)
+        .catch(() => {
+          setError('Failed to update item quantity');
+        })
+        .finally(() => setSaving(false));
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qty]);
 
   const handleCheckboxChange = (e) => {
     onMarkOwned(e.target.checked);
   };
   const unit = item.material?.unit || 'unit';
-  const displayUnit = item.quantity > 1 ? unit + "s" : unit;
+  // Handle edge cases for units
+    function getDisplayUnit(quantity, unit) {
+      const normalized = unit.toLowerCase();
+      // Square feet
+      if (["sq ft", "sq feet", "sqft", "square feet", "square foot"].includes(normalized)) {
+        return quantity === 1 ? "square foot" : "square feet";
+      }
+      // Square meters
+      if (["sq m", "sq meter", "sq meters", "sqm", "square meter", "square meters"].includes(normalized)) {
+        return quantity === 1 ? "square meter" : "square meters";
+      }
+      // Feet
+      if (["ft", "feet"].includes(normalized)) {
+        return quantity === 1 ? "foot" : "feet";
+      }
+      // Meters
+      if (["m", "meter", "meters"].includes(normalized)) {
+        return quantity === 1 ? "meter" : "meters";
+      }
+      // Piece
+      if (normalized === "piece") {
+        return quantity === 1 ? "piece" : "pieces";
+      }
+      // Default pluralization
+      return quantity === 1 ? unit : unit + "s";
+    }
+  const displayUnit = getDisplayUnit(qty, unit);
+
+  // Check if material has store mapping
+  const hasStoreMapping = item.material?.store && item.material?.sku;
 
   return (
     <div className={`list-row ${isOwned ? 'have' : ''}`}>
@@ -41,24 +77,40 @@ function SimpleRow({ item, isOwned, onMarkOwned, onUpdateItem, onDeleteItem }) {
         </label>
       </div>
       <div className="list-row-main">
-        <h4>{item.material?.name}</h4>
-        
+        {!hasStoreMapping && <h4>{item.material?.name}</h4>}
+        {hasStoreMapping && (
+          <p className="product-info" onClick={isDetailsOpen ? onCloseDetails : onOpenDetails} style={{ cursor: 'pointer', color: '#3182ce', fontWeight: 500 }}>
+            📦 {item.material.product_title} ({item.material.store}) - ${item.material.price}
+          </p>
+        )}
       </div>
       <div className="list-row-actions">
-        <input className="quantity-input" type="number" min="0" step="1" value={qty} onChange={(e) => setQty(parseFloat(e.target.value) || 0)} />
+        <input className="quantity-input" type="number" min="0" step="1" value={Number.isNaN(qty) ? '' : Math.floor(qty)} onChange={(e) => setQty(Math.max(0, Math.floor(parseFloat(e.target.value) || 0)))} disabled={saving} />
         <p className="item-meta">{displayUnit}</p>
-        <button className="save-btn" onClick={handleSave} disabled={saving || qty === item.quantity}>{saving ? 'Saving...' : 'Save'}</button>
+        {!hasStoreMapping && (
+          <button className="search-btn" onClick={() => onSearchProducts(item)}>Search Stores</button>
+        )}
         <button className="delete-btn" onClick={onDeleteItem}>Delete</button>
       </div>
+      {error && <div className="error-message" style={{ color: 'red', marginTop: 4 }}>{error}</div>}
     </div>
   );
 }
 
 export default function ShoppingList({ listId, userId, onBack }) {
+    // Track which item is open for details
+    const [openDetailsItemId, setOpenDetailsItemId] = useState(null);
   const [list, setList] = useState(null);
   const [userMaterials, setUserMaterials] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Product search modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedItemForSearch, setSelectedItemForSearch] = useState(null);
+  
+  // Checkout modal
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -120,6 +172,39 @@ export default function ShoppingList({ listId, userId, onBack }) {
     if (!userMat) return false;
     return userMat.quantity >= item.quantity;
   };
+
+  const handleSearchProducts = (item) => {
+    setSelectedItemForSearch(item);
+    setModalOpen(true);
+  };
+
+  const handleProductSearch = async (product, updatedMaterial) => {
+    // If material was updated with store mapping, refresh the shopping list
+    if (updatedMaterial && selectedItemForSearch) {
+      setList((prev) => ({
+        ...prev,
+        items: prev.items.map((item) => 
+          item.id === selectedItemForSearch.id 
+            ? { ...item, material: updatedMaterial }
+            : item
+        ),
+      }));
+    }
+    setModalOpen(false);
+    setSelectedItemForSearch(null);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setSelectedItemForSearch(null);
+  };
+
+  // Calculate totals
+  const totalItems = list.items.length;
+  const totalPrice = list ? list.items.reduce((sum, item) => {
+    const price = item.material?.price || 0;
+    return sum + (price * item.quantity);
+  }, 0) : 0;
 
   const handleAddUserMaterial = async (item) => {
     try {
@@ -183,55 +268,13 @@ export default function ShoppingList({ listId, userId, onBack }) {
             {list.items
               .filter((it) => !checkUserHasQuantity(it))
               .map((item) => (
-                <SimpleRow
-                  key={item.id}
-                  item={item}
-                  isOwned={false}
-                  onMarkOwned={(isOwned) => {
-                    if (isOwned) {
-                      handleAddUserMaterial(item);
-                    }
-                  }}
-                  onUpdateItem={async (quantity) => {
-                    try {
-                      const res = await updateShoppingListItem(item.id, { quantity });
-                      handleItemUpdate(item.id, { ...item, quantity: res.data.quantity });
-                    } catch (err) {
-                      console.error('Failed to update shopping list item:', err);
-                      alert('Failed to update item quantity');
-                    }
-                  }}
-                  onDeleteItem={async () => {
-                    if (!window.confirm('Remove this item from the shopping list?')) return;
-                    try {
-                      await deleteShoppingListItem(item.id);
-                      handleItemDelete(item.id);
-                    } catch (err) {
-                      console.error('Failed to delete shopping list item:', err);
-                      alert('Failed to delete item');
-                    }
-                  }}
-                />
-              ))}
-          </div>
-
-          <div className="list-section">
-            <h2>Already Have</h2>
-            {list.items.filter((it) => checkUserHasQuantity(it)).length === 0 && (
-              <p className="empty-message">Click on checkboxes if you already own a material or tool.</p>
-            )}
-            {list.items
-              .filter((it) => checkUserHasQuantity(it))
-              .map((item) => {
-                const userMat = userMaterials[item.material?.id];
-                return (
+                <div key={item.id}>
                   <SimpleRow
-                    key={item.id}
                     item={item}
-                    isOwned={true}
+                    isOwned={false}
                     onMarkOwned={(isOwned) => {
-                      if (!isOwned) {
-                        handleRemoveUserMaterial(item.material.id);
+                      if (isOwned) {
+                        handleAddUserMaterial(item);
                       }
                     }}
                     onUpdateItem={async (quantity) => {
@@ -253,7 +296,65 @@ export default function ShoppingList({ listId, userId, onBack }) {
                         alert('Failed to delete item');
                       }
                     }}
+                    onSearchProducts={handleSearchProducts}
+                    isDetailsOpen={openDetailsItemId === item.id}
+                    onOpenDetails={() => setOpenDetailsItemId(item.id)}
+                    onCloseDetails={() => setOpenDetailsItemId(null)}
                   />
+                  {openDetailsItemId === item.id && item.material?.store && item.material?.sku && (
+                    <ItemDetailsPanel material={item.material} onClose={() => setOpenDetailsItemId(null)} />
+                  )}
+                </div>
+              ))}
+          </div>
+
+          <div className="list-section">
+            <h2>Already Have</h2>
+            {list.items.filter((it) => checkUserHasQuantity(it)).length === 0 && (
+              <p className="empty-message">Click on checkboxes if you already own a material or tool.</p>
+            )}
+            {list.items
+              .filter((it) => checkUserHasQuantity(it))
+              .map((item) => {
+                const userMat = userMaterials[item.material?.id];
+                return (
+                  <div key={item.id}>
+                    <SimpleRow
+                      item={item}
+                      isOwned={true}
+                      onMarkOwned={(isOwned) => {
+                        if (!isOwned) {
+                          handleRemoveUserMaterial(item.material.id);
+                        }
+                      }}
+                      onUpdateItem={async (quantity) => {
+                        try {
+                          const res = await updateShoppingListItem(item.id, { quantity });
+                          handleItemUpdate(item.id, { ...item, quantity: res.data.quantity });
+                        } catch (err) {
+                          console.error('Failed to update shopping list item:', err);
+                          alert('Failed to update item quantity');
+                        }
+                      }}
+                      onDeleteItem={async () => {
+                        if (!window.confirm('Remove this item from the shopping list?')) return;
+                        try {
+                          await deleteShoppingListItem(item.id);
+                          handleItemDelete(item.id);
+                        } catch (err) {
+                          console.error('Failed to delete shopping list item:', err);
+                          alert('Failed to delete item');
+                        }
+                      }}
+                      onSearchProducts={handleSearchProducts}
+                      isDetailsOpen={openDetailsItemId === item.id}
+                      onOpenDetails={() => setOpenDetailsItemId(item.id)}
+                      onCloseDetails={() => setOpenDetailsItemId(null)}
+                    />
+                    {openDetailsItemId === item.id && item.material?.store && item.material?.sku && (
+                      <ItemDetailsPanel material={item.material} onClose={() => setOpenDetailsItemId(null)} />
+                    )}
+                  </div>
                 );
               })}
           </div>
@@ -262,7 +363,53 @@ export default function ShoppingList({ listId, userId, onBack }) {
         <p className="empty-message">No items in this list yet.</p>
       )}
 
+      {/* Totals Section */}
+      <div className="totals-section" style={{ marginTop: '24px', padding: '16px', background: '#f8f9fa', borderRadius: '8px', textAlign: 'center' }}>
+        <p style={{ margin: '8px 0' }}><strong>Total Items:</strong> {totalItems}</p>
+        <p style={{ margin: '8px 0', fontSize: '18px', fontWeight: 'bold', color: '#3182ce' }}><strong>Total Price:</strong> ${totalPrice.toFixed(2)}</p>
+      </div>
+
+      {/* Checkout Button */}
+      <button 
+        onClick={() => setCheckoutModalOpen(true)} 
+        style={{ marginTop: '16px', width: '100%', padding: '12px', fontSize: '16px', fontWeight: 'bold', background: '#27ae60', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+      >
+        Checkout
+      </button>
+
+      {/* Checkout Modal */}
+      {checkoutModalOpen && (
+        <div className="checkout-modal-overlay" onClick={() => setCheckoutModalOpen(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div className="checkout-modal" onClick={(e) => e.stopPropagation()} style={{ background: 'white', borderRadius: '12px', padding: '32px', maxWidth: '500px', textAlign: 'center' }}>
+            <h2 style={{ marginBottom: '16px' }}>💳 Become a DIY Member</h2>
+            <p style={{ marginBottom: '24px', color: '#666' }}>Use Cart Checkout to track your project and manage orders across stores.</p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button 
+                onClick={() => setCheckoutModalOpen(false)}
+                style={{ padding: '10px 24px', borderRadius: '6px', background: '#e0e0e0', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+              >Close</button>
+              <a 
+                href="#" 
+                onClick={(e) => { e.preventDefault(); }}
+                style={{ padding: '10px 24px', borderRadius: '6px', background: '#3182ce', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600, textDecoration: 'none' }}
+              >Learn More</a>
+            </div>
+          </div>
+        </div>
+      )}
+
       <AddItemForm listId={listId} onItemAdded={handleItemAdded} />
+
+      {/* Product Search Modal */}
+      {selectedItemForSearch && (
+        <ProductSearchModal
+          isOpen={modalOpen}
+          onClose={handleCloseModal}
+          onSelect={handleProductSearch}
+          materialName={selectedItemForSearch.material?.name}
+          materialId={selectedItemForSearch.material?.id}
+        />
+      )}
     </div>
   );
 }

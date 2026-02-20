@@ -99,7 +99,7 @@ class MaterialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Material
         fields = ['id', 'name', 'category', 'store', 'sku', 'unit', 'notes',
-                  'product_title', 'product_url', 'product_image_url']
+                  'product_title', 'product_url', 'product_image_url', 'price']
 
 
 class ProjectMaterialSerializer(serializers.ModelSerializer):

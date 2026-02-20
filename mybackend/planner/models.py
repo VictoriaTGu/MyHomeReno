@@ -28,6 +28,7 @@ class Material(models.Model):
     product_title = models.CharField(max_length=500, blank=True, null=True)  # product name from store
     product_url = models.URLField(blank=True, null=True)  # direct store product link
     product_image_url = models.URLField(blank=True, null=True)  # primary product image
+    price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # price of the material
 
     class Meta:
         ordering = ['name']

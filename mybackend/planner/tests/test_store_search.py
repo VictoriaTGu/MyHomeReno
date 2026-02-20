@@ -66,6 +66,39 @@ class DummyStoreSearchClientTests(TestCase):
 
 
 class StoreSearchAPITests(TestCase):
+        def test_store_search_product_results_include_price(self):
+            """Test that store search results include a price field and it is a float or int."""
+            from planner.store_search import DummyStoreSearchClient
+            client = DummyStoreSearchClient()
+            results = client.search_products("test")
+            for product in results:
+                self.assertIn("price", product)
+                self.assertIsInstance(product["price"], (int, float))
+
+        @override_settings(STORE_SEARCH_USE_DUMMY=True)
+        def test_patch_material_store_mapping_updates_price(self):
+            """Test PATCH /api/materials/<id>/store-mapping/ updates price and other fields."""
+            # Create a material
+            material = Material.objects.create(name="Copper pipe", category="pipe", unit="ft")
+            url = f"/api/materials/{material.id}/store-mapping/"
+            patch_data = {
+                "store": "amazon",
+                "sku": "B00COPPER123",
+                "product_title": "1/2\" Copper Pipe, 10 ft",
+                "product_url": "https://www.amazon.com/dp/B00COPPER123",
+                "product_image_url": "https://images.amazon.com/small/B00COPPER123.jpg",
+                "price": 24.99,
+                "unit": "ft"
+            }
+            response = self.client.patch(url, patch_data, format="json")
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            material.refresh_from_db()
+            self.assertEqual(material.price, 24.99)
+            self.assertEqual(material.store, "amazon")
+            self.assertEqual(material.sku, "B00COPPER123")
+            self.assertEqual(material.product_title, "1/2\" Copper Pipe, 10 ft")
+            self.assertEqual(material.product_url, "https://www.amazon.com/dp/B00COPPER123")
+            self.assertEqual(material.product_image_url, "https://images.amazon.com/small/B00COPPER123.jpg")
     """Test the store search API endpoint."""
     
     def setUp(self):

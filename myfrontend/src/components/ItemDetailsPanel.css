@@ -1,0 +1,109 @@
+.item-details-panel {
+  background: #f0f4f8;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 16px;
+  margin-top: 0;
+  margin-bottom: 12px;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 500px;
+}
+.item-details-panel.slide-out {
+  animation: slideDownFadeIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes slideDownFadeIn {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+    transform: translateY(0);
+  }
+}
+.item-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+.item-details-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+.item-details-title strong {
+  font-size: 15px;
+  color: #1a202c;
+}
+.item-details-store {
+  font-size: 12px;
+  color: #718096;
+  text-transform: capitalize;
+  font-weight: 500;
+}
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #a0aec0;
+  cursor: pointer;
+  margin-left: 8px;
+  line-height: 1;
+  padding: 0;
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+}
+.close-btn:hover {
+  color: #718096;
+}
+.item-details-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.item-details-price {
+  margin: 0;
+  font-size: 14px;
+  color: #2d3748;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.item-details-price span {
+  color: #27ae60;
+  font-weight: 600;
+  font-size: 16px;
+}
+.item-details-link {
+  color: #3182ce;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-block;
+  transition: color 0.2s ease;
+}
+.item-details-link:hover {
+  color: #2c5aa0;
+  text-decoration: underline;
+}
+.item-details-image {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+.item-details-image img {
+  max-width: 140px;
+  max-height: 140px;
+  border-radius: 6px;
+  display: block;
+}
