@@ -200,7 +200,7 @@ export default function ShoppingList({ listId, userId, onBack }) {
   };
 
   // Calculate totals
-  const totalItems = list.items.length;
+  const totalItems = list ? list.items.length : 0;
   const totalPrice = list ? list.items.reduce((sum, item) => {
     const price = item.material?.price || 0;
     return sum + (price * item.quantity);
