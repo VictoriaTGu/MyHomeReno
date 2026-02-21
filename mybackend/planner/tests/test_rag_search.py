@@ -67,13 +67,11 @@ class GeneratePlanTests(TestCase):
             MagicMock(page_content='Copper pipe installation guide...'),
             MagicMock(page_content='PEX tubing best practices...'),
         ]
-        
         mock_vectorstore = MagicMock()
         mock_vectorstore.as_retriever.return_value = mock_retriever
         mock_chroma.return_value = mock_vectorstore
 
         # Setup mock LLM response
-        mock_llm = MagicMock()
         mock_response_content = json.dumps({
             "materials": [
                 {"name": "PEX tubing", "quantity": 50, "unit": "ft", "category": "pipe"},
@@ -95,8 +93,8 @@ class GeneratePlanTests(TestCase):
                 "Ensure proper crimping of connectors",
             ]
         })
-        
-        mock_llm.invoke.return_value = AIMessage(content=mock_response_content)
+        mock_llm = MagicMock(return_value=mock_response_content)
+        mock_llm.invoke.return_value = mock_response_content
         mock_chat_openai.return_value = mock_llm
 
         # Execute
@@ -147,9 +145,8 @@ class GeneratePlanTests(TestCase):
             "warnings": ["Test warning"]
         }
         mock_response_content = f"```json\n{json.dumps(valid_json)}\n```"
-        
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value = AIMessage(content=mock_response_content)
+        mock_llm = MagicMock(return_value=mock_response_content)
+        mock_llm.invoke.return_value = mock_response_content
         mock_chat_openai.return_value = mock_llm
 
         result = generate_plan("Test project")
@@ -170,8 +167,8 @@ class GeneratePlanTests(TestCase):
         mock_chroma.return_value = mock_vectorstore
 
         # Invalid JSON response
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value = AIMessage(content="This is not JSON at all")
+        mock_llm = MagicMock(return_value="This is not JSON at all")
+        mock_llm.invoke.return_value = "This is not JSON at all"
         mock_chat_openai.return_value = mock_llm
 
         with self.assertRaises(ValueError) as context:
@@ -196,8 +193,8 @@ class GeneratePlanTests(TestCase):
             "warnings": []
         }
         
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value = AIMessage(content=json.dumps(mock_response))
+        mock_llm = MagicMock(return_value=json.dumps(mock_response))
+        mock_llm.invoke.return_value = json.dumps(mock_response)
         mock_chat_openai.return_value = mock_llm
 
         result = generate_plan("Test project")
@@ -225,8 +222,8 @@ class GeneratePlanTests(TestCase):
                 "warnings": []
             }
             
-            mock_llm = MagicMock()
-            mock_llm.invoke.return_value = AIMessage(content=json.dumps(mock_response))
+            mock_llm = MagicMock(return_value=json.dumps(mock_response))
+            mock_llm.invoke.return_value = json.dumps(mock_response)
             mock_chat_openai.return_value = mock_llm
 
             result = generate_plan("Test project")
@@ -287,8 +284,8 @@ class GeneratePlanTests(TestCase):
             "warnings": ["Warning 1"]
         }
         
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value = AIMessage(content=json.dumps(mock_response))
+        mock_llm = MagicMock(return_value=json.dumps(mock_response))
+        mock_llm.invoke.return_value = json.dumps(mock_response)
         mock_chat_openai.return_value = mock_llm
 
         result = generate_plan("Complex project")
@@ -317,8 +314,8 @@ class GeneratePlanTests(TestCase):
             # Missing tools, steps, warnings
         }
         
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value = AIMessage(content=json.dumps(mock_response))
+        mock_llm = MagicMock(return_value=json.dumps(mock_response))
+        mock_llm.invoke.return_value = json.dumps(mock_response)
         mock_chat_openai.return_value = mock_llm
 
         result = generate_plan("Test project")
