@@ -73,10 +73,8 @@
 
 
 /* Unified item style for both materials and tools */
-.plan-material-item,
-.tool-item {
+.material-item {
   background: white;
-  border-left: 4px solid #27ae60;
   padding: 12px;
   border-radius: 6px;
   display: flex;
@@ -86,21 +84,17 @@
   transition: all 0.2s ease;
 }
 
-.plan-material-item:hover,
-.tool-item:hover {
+.material-item {
+  border-left: 4px solid #27ae60;
+}
+
+.material-item:hover,
+.material-item:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .material-info {
-  display: flex;
-  align-items: center;
-  margin-bottom: 8px;
-  padding: 8px 12px;
-  background: #f8f9fa;
-  border-radius: 6px;
-  border-left: 4px solid #007bff;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  transition: all 0.2s ease;
+    flex-grow: 1;
 }
 
 .material-info:hover {
@@ -122,9 +116,7 @@
 }
 
 .material-category {
-  background: #007bff;
   color: white;
-  padding: 2px 8px;
   border-radius: 12px;
   font-size: 0.85em;
   font-weight: 500;
@@ -158,13 +150,13 @@
 }
 
 /* Tools List */
-.tools-list {
+.materials-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.tool-item {
+.material-item {
   background: white;
   border-left: 4px solid #27ae60;
   padding: 12px;
@@ -176,15 +168,15 @@
   transition: all 0.2s ease;
 }
 
-.tool-item:hover {
+.material-item:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.tool-info {
+.material-info {
   flex-grow: 1;
 }
 
-.tool-name {
+.material-name {
   font-weight: 600;
   color: #2c3e50;
   font-size: 16px;
@@ -192,14 +184,14 @@
   display: block;
 }
 
-.tool-quantity {
+.material-quantity {
   color: #7f8c8d;
   font-size: 14px;
   margin-bottom: 4px;
   display: block;
 }
 
-.tool-category {
+.material-category {
   color: #95a5a6;
   font-size: 12px;
   font-style: italic;
@@ -275,7 +267,7 @@
     width: 100%;
   }
 
-  .plan-tools-list {
+  .plan-materials-list {
     grid-template-columns: 1fr;
   }
 }
