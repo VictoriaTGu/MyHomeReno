@@ -1,0 +1,16 @@
+.git
+.gitignore
+*.pyc
+__pycache__
+.DS_Store
+.env
+.env.local
+docs/
+node_modules/
+myfrontend/node_modules/
+myfrontend/.env
+myfrontend/dist/
+mybackend/__pycache__/
+mybackend/*/__pycache__/
+.venv/
+venv/
