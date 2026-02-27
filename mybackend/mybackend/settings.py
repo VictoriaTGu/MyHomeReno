@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 import os
-import django_heroku
 import dj_database_url
 from pathlib import Path
 
@@ -43,29 +42,21 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_vite',
     'rest_framework',
     'corsheaders',
     'rest_framework.authtoken',
     'planner',
 ]
 
-# MIDDLEWARE = [
-#     'django.middleware.security.SecurityMiddleware',
-#     'whitenoise.middleware.WhiteNoiseMiddleware',  # Add this
-#     'django.contrib.sessions.middleware.SessionMiddleware',
-#     'django.middleware.common.CommonMiddleware',
-#     'django.middleware.csrf.CsrfViewMiddleware',
-#     'django.contrib.auth.middleware.AuthenticationMiddleware',
-#     'django.contrib.messages.middleware.MessageMiddleware',
-#     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-# ]
+# Old MIDDLEWARE configuration - see active MIDDLEWARE below for current setup
 
 ROOT_URLCONF = 'mybackend.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -90,8 +81,7 @@ DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # Add Heroku domain
-if 'herokuapp.com' not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append('*.herokuapp.com')
+ALLOWED_HOSTS.append('my-home-reno-a36b7afe5351.herokuapp.com')
 
 # DATABASE CONFIGURATION
 if os.environ.get('DATABASE_URL'):
@@ -154,6 +144,18 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
 # Django REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
@@ -173,11 +175,22 @@ REST_FRAMEWORK = {
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Tell Django to collect static files here
-# Add path to built frontend
+# Collect static files from Vite build output and Django apps
 STATICFILES_DIRS = [
-    BASE_DIR / 'frontend_build',  # Built React files
+    BASE_DIR / 'frontend_build',  # Built React files from Vite
 ]
+
+# WhiteNoise configuration for efficient static file serving
+WHITENOISE_AUTOREFRESH = True
+WHITENOISE_INDEX_FILE = True
+
+# Django-Vite Configuration
+DJANGO_VITE = {
+    'default': {
+        'dev_mode': DEBUG,
+        'manifest_path': BASE_DIR / 'frontend_build' / 'manifest.json',
+    }
+}
 
 # CSRF & SECURITY
 CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if os.environ.get('CSRF_TRUSTED_ORIGINS') else []
@@ -188,7 +201,8 @@ CSRF_COOKIE_SECURE = not DEBUG
 # Whitenoise middleware for serving static files
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add this
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Must be early in list
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -267,5 +281,3 @@ RAG_EMBEDDING_MODEL = os.getenv('RAG_EMBEDDING_MODEL', 'text-embedding-3-small')
 # ChromaDB Vector Store Persistence
 CHROMA_PERSIST_DIR = os.getenv('CHROMA_PERSIST_DIR', 'chroma_db')
 
-# Heroku specific configs
-django_heroku.settings(locals())

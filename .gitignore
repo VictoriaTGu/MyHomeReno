@@ -30,3 +30,5 @@ mybackend/planner/chroma_db/
 mybackend/chroma_db/
 mybackend/db.sqlite3
 myfrontend/package-lock.json
+mybackend/frontend_build/
+chroma_db/

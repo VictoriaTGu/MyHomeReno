@@ -1,0 +1,13 @@
+{
+  "name": "my-home-reno",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "heroku-postbuild": "cd myfrontend && npm install --include=dev && npm run build",
+    "dev": "cd myfrontend && npm run dev",
+    "build": "cd myfrontend && npm run build",
+    "preview": "cd myfrontend && npm run preview"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}

@@ -6,7 +6,12 @@ export default defineConfig({
   build: {
     outDir: '../mybackend/frontend_build',
     emptyOutDir: true,
+    manifest: 'manifest.json',
+    rollupOptions: {
+      input: 'src/main.jsx',
+    },
   },
+  base: "/static/",
   server: {
     proxy: {
       '/api': {
