@@ -116,7 +116,7 @@ class HomeDepotSearchClient(StoreSearchClient):
             logger.info(f"Calling SerpAPI for Home Depot search: query='{query}' limit={limit}")
             
             # Make API request
-            response = requests.get(base_url, params=params, timeout=10)
+            response = requests.get(base_url, params=params, timeout=30)
             response.raise_for_status()
             
             data = response.json()

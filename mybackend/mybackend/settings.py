@@ -22,15 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '***REDACTED_DJANGO_SECRET***'
-
-
-# Heroku specific configs
-# STATICFILES_DIRS = [
-#     os.path.join(BASE_DIR, 'myfrontend/dist/'),
-# ]
-# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 
 # Application definition
@@ -140,7 +132,11 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:3000",
+    "https://my-home-reno-a36b7afe5351.herokuapp.com",
 ]
+
+# For debugging CORS issues only (remove/comment out in production):
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -202,7 +198,7 @@ CSRF_COOKIE_SECURE = not DEBUG
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # Must be early in list
+    'corsheaders.middleware.CorsMiddleware',  # Must be just after WhiteNoise
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
   build: {
     outDir: '../mybackend/frontend_build',
@@ -11,7 +11,7 @@ export default defineConfig({
       input: 'src/main.jsx',
     },
   },
-  base: "/static/",
+  base: mode === 'development' ? '/' : '/static/',
   server: {
     proxy: {
       '/api': {
@@ -20,4 +20,4 @@ export default defineConfig({
       }
     }
   }
-})
+}))
