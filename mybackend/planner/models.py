@@ -7,6 +7,7 @@ class Project(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     img = models.CharField(max_length=500, blank=True, null=True)  # URL or file path
+    steps = models.JSONField(default=list, blank=True, null=True)  # AI-generated project steps
 
     class Meta:
         ordering = ['name']

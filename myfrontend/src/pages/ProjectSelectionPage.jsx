@@ -133,11 +133,19 @@ export default function ProjectSelectionPage() {
                     setIsCreating(true);
                     try {
                       const { createProject, createShoppingList, getUserId } = await import('../services/api');
+                      // For now, combine materials and tools into one list
+                      // Add category=`material` for the materials and category=`tool` for the tools 
+                      // so we can separate them in the UI if we want to in the future
+                      const combinedMaterials = [
+                        ...(planResult.materials || []).map(item => ({ ...item, category: 'material' })),
+                        ...(planResult.tools || []).map(item => ({ ...item, category: 'tool' })),
+                      ];
                       // Prepare project payload
                       const projectPayload = {
                         name: planResult.title || 'AI Generated Project',
                         description: planResult.description || planInput,
-                        materials: planResult.materials || [],
+                        materials: combinedMaterials,
+                        steps: planResult.steps || [],
                       };
                       // Create project
                       const projectRes = await createProject(projectPayload);

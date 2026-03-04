@@ -32,6 +32,7 @@ Fields (Django model: `Project`):
 - `id`: PK
 - `name`: string
 - `description`: text (optional)
+- `steps`: JSONField (optional)
 - `img`: string (nullable) - pointing to a url or file path
 
 ### Materials

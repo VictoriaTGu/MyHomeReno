@@ -59,7 +59,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     materials = ProjectMaterialInputSerializer(many=True, write_only=True)
     class Meta:
         model = Project
-        fields = ['id', 'name', 'description', 'img', 'materials']
+        fields = ['id', 'name', 'description', 'img', 'steps', 'materials']
 
     def create(self, validated_data):
         logger.info("ProjectSerializer.create called with validated_data: %s", validated_data)

@@ -120,9 +120,9 @@ class LoginView(APIView):
 
 
 
-class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
+class ProjectViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for listing projects and their default materials.
+    ViewSet for listing, retrieving, creating, and updating projects and their default materials.
     """
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer

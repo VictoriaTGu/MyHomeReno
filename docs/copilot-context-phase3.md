@@ -12,8 +12,7 @@ Extend the DIY Project Planner to provide **AI-powered project planning** based 
 5. Display results below text box
 6. Allow user to revise their input and click the "Generate plan" button again if they wish
 7. Display a button below the plan results entitled 'Start Project' 
--> Call `POST /api/projects/` with the list of materials provided in the project plan. It should return the serialized project and newly created 
-`ProjectMaterial`s. If that succeeds then
+-> Call `POST /api/projects/` with the materials and steps provided in the AI-generated project plan. It should save the AI-generated `steps` in the `steps` field of `Project`, then return the serialized project ( and newly created  `ProjectMaterial`s. If that succeeds then
 -> Call `POST /api/shopping-lists/` with `project_id`=`new_id` → navigate to shopping list page. 
 
 **Key requirements:**

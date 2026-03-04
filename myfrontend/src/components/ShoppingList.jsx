@@ -258,6 +258,19 @@ export default function ShoppingList({ listId, userId, onBack }) {
         <p className="meta">Created: {new Date(list.created_at).toLocaleDateString()}</p>
       </div>
 
+      {list.project && list.project.steps && list.project.steps.length > 0 && (
+        <div className="list-section">
+          <h2>Project Steps</h2>
+          <ol className="steps-list">
+            {list.project.steps.map((step, index) => (
+              <li key={index} className="step-item">
+                {typeof step === 'string' ? step : step.description || step.title || JSON.stringify(step)}
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
       {list.items && list.items.length > 0 ? (
         <>
           <div className="list-section">
