@@ -34,14 +34,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_vite',
     'rest_framework',
     'corsheaders',
     'rest_framework.authtoken',
+    'django_vite',
     'planner',
 ]
-
-# Old MIDDLEWARE configuration - see active MIDDLEWARE below for current setup
 
 ROOT_URLCONF = 'mybackend.urls'
 
@@ -69,11 +67,6 @@ WSGI_APPLICATION = 'mybackend.wsgi.application'
 
 # SECURITY SETTINGS FOR PRODUCTION
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
-
-# Add Heroku domain
-ALLOWED_HOSTS.append('my-home-reno-a36b7afe5351.herokuapp.com')
 
 # DATABASE CONFIGURATION
 if os.environ.get('DATABASE_URL'):
@@ -135,9 +128,6 @@ CORS_ALLOWED_ORIGINS = [
     "https://my-home-reno-a36b7afe5351.herokuapp.com",
 ]
 
-# For debugging CORS issues only (remove/comment out in production):
-CORS_ALLOW_ALL_ORIGINS = True
-
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_HEADERS = [
@@ -194,10 +184,9 @@ SECURE_SSL_REDIRECT = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 
-# Whitenoise middleware for serving static files
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # Whitenoise middleware for serving static files
     'corsheaders.middleware.CorsMiddleware',  # Must be just after WhiteNoise
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
