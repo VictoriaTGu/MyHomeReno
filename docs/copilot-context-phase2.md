@@ -36,8 +36,9 @@ This file should be read together with `copilot-context-phase1.md`, which define
 New in Phase 2:
 
 - External product APIs:
-  - Initial implementation: **Amazon Product API** (or a mocked equivalent) for search.
-  - Later: Alternates (Lowe’s, Home Depot, etc.) hidden behind a store‑agnostic abstraction.
+  - Implementation: **SerpAPI** for Home Depot, Amazon, Lowe's, and other stores.
+  - Abstraction: Store-agnostic interface hiding store-specific implementation details.
+  - Configuration: Dummy client available for testing (set `STORE_SEARCH_USE_DUMMY=true`)
 
 ---
 
@@ -72,11 +73,12 @@ Phase 2 extends the meaning of some fields and adds a few more:
   - Deep link to the product page on the store’s site.
 - `product_image_url`: string (nullable)  
   - Main product image URL from the store.
-
+- `price`: decimal (nullable)  
+  - Price of the product from the primary store (max_digits=10, decimal_places=2).
 Key rule:
 
 - If the user picks a product from the search results:
-  - `store`, `sku`, `product_title`, `product_url`, `product_image_url` on the associated `Material` should be updated to match the chosen product.
+  - `store`, `sku`, `product_title`, `product_url`, `product_image_url`, and `price` on the associated `Material` should be updated to match the chosen product.
 - If the user does **not** pick a product:
   - Those fields remain `null` (or unchanged).
 

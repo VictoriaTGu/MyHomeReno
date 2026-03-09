@@ -29,22 +29,6 @@ This guide explains how to deploy both frontend and backend as a unified project
 
 **Purpose:** Heroku's Python buildpack looks for `requirements.txt` in the root directory. This file installs Python dependencies for the entire project.
 
-**Content:**
-```
-Django==4.2.0
-djangorestframework==3.14.0
-gunicorn==20.1.0
-whitenoise==6.4.0
-dj-database-url==1.3.0
-psycopg2-binary==2.9.6
-python-decouple==3.8
-django-heroku==0.3.1
-python-dotenv==1.0.0
-langchain==0.0.280
-openai==0.27.8
-chromadb==0.3.21
-```
-
 **How it works:**
 - Heroku runs `pip install -r requirements.txt` in root directory
 - This installs all backend dependencies globally on the dyno

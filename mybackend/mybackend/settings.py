@@ -24,6 +24,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
+# ALLOWED_HOSTS - supports both local development and production
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "[::1]",  # IPv6 localhost
+    "my-home-reno-a36b7afe5351.herokuapp.com",
+]
+
+# Add any additional hosts from environment variable (comma-separated)
+if os.environ.get('ALLOWED_HOSTS'):
+    ALLOWED_HOSTS.extend(os.environ.get('ALLOWED_HOSTS', '').split(','))
 
 # Application definition
 
@@ -179,7 +190,13 @@ DJANGO_VITE = {
 }
 
 # CSRF & SECURITY
-CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if os.environ.get('CSRF_TRUSTED_ORIGINS') else []
+CSRF_TRUSTED_ORIGINS = [
+    "https://my-home-reno-a36b7afe5351.herokuapp.com",
+]
+if os.environ.get('CSRF_TRUSTED_ORIGINS'):
+    CSRF_TRUSTED_ORIGINS.extend(os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(','))
+
+# Only enforce SSL redirect in production (not on localhost)
 SECURE_SSL_REDIRECT = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
