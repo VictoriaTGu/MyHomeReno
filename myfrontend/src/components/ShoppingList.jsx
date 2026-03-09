@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ItemDetailsPanel from './ItemDetailsPanel';
 import AddItemForm from './AddItemForm';
 import ProductSearchModal from './ProductSearchModal';
+import ApiLimitModal from './ApiLimitModal';
 import { getShoppingList, getUserMaterials, createUserMaterial, updateUserMaterial, deleteUserMaterial, updateShoppingListItem, deleteShoppingListItem, addShoppingListItem } from '../services/api';
 import './ShoppingList.css';
 
@@ -108,6 +109,10 @@ export default function ShoppingList({ listId, userId, onBack }) {
   // Product search modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedItemForSearch, setSelectedItemForSearch] = useState(null);
+  
+  // API limit modal state
+  const [apiLimitError, setApiLimitError] = useState(null);
+  const [showApiLimitModal, setShowApiLimitModal] = useState(false);
   
   // Checkout modal
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
@@ -413,6 +418,14 @@ export default function ShoppingList({ listId, userId, onBack }) {
 
       <AddItemForm listId={listId} onItemAdded={handleItemAdded} />
 
+      {/* API Limit Modal */}
+      <ApiLimitModal
+        isOpen={showApiLimitModal}
+        onClose={() => setShowApiLimitModal(false)}
+        service={apiLimitError?.service}
+        status={apiLimitError?.status}
+      />
+
       {/* Product Search Modal */}
       {selectedItemForSearch && (
         <ProductSearchModal
@@ -421,6 +434,12 @@ export default function ShoppingList({ listId, userId, onBack }) {
           onSelect={handleProductSearch}
           materialName={selectedItemForSearch.material?.name}
           materialId={selectedItemForSearch.material?.id}
+          onApiLimitError={(errorData) => {
+            setApiLimitError(errorData);
+            setShowApiLimitModal(true);
+            // Close the search modal, but keep ApiLimitModal visible
+            setModalOpen(false);
+          }}
         />
       )}
     </div>

@@ -17,6 +17,7 @@ from .serializers import (
 )
 from .store_search import get_store_client
 from .rag_search import generate_plan
+from .utils import check_api_call_limit, increment_api_call, get_api_call_status, APICallLimitExceeded
 
 
 class StoreSearchViewSet(viewsets.ViewSet):
@@ -49,6 +50,21 @@ class StoreSearchViewSet(viewsets.ViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # Check API call limit for SerpAPI
+        try:
+            check_api_call_limit(request.user, 'serpapi')
+        except APICallLimitExceeded as e:
+            self.logger.warning(f"API limit exceeded for user {request.user.id}: {str(e)}")
+            return Response(
+                {
+                    'detail': str(e),
+                    'error_code': 'API_LIMIT_EXCEEDED',
+                    'service': 'serpapi',
+                    'status': get_api_call_status(request.user, 'serpapi')
+                },
+                status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
+        
         # Get optional parameters
         store = request.query_params.get('store', 'home_depot').lower()
         try:
@@ -74,9 +90,15 @@ class StoreSearchViewSet(viewsets.ViewSet):
             )
             results = client.search_products(query, limit=limit)
             
-            # Serialize results
+            # Increment call count
+            increment_api_call(request.user, 'serpapi')
+            
+            # Serialize results with status info
             serializer = ProductResultSerializer(results, many=True)
-            return Response(serializer.data)
+            return Response({
+                'results': serializer.data,
+                'status': get_api_call_status(request.user, 'serpapi')
+            })
             
         except ValueError as e:
             self.logger.warning(f"Invalid store parameter: {store}")
@@ -548,6 +570,21 @@ class PlanGenerationView(APIView):
         The plan includes materials, tools, steps, and safety warnings generated
         using RAG (Retrieval-Augmented Generation) from OpenAI and ChromaDB.
         """
+        # Check API call limit for OpenAI
+        try:
+            check_api_call_limit(request.user, 'openai')
+        except APICallLimitExceeded as e:
+            self.logger.warning(f"API limit exceeded for user {request.user.id}: {str(e)}")
+            return Response(
+                {
+                    'detail': str(e),
+                    'error_code': 'API_LIMIT_EXCEEDED',
+                    'service': 'openai',
+                    'status': get_api_call_status(request.user, 'openai')
+                },
+                status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
+        
         # Validate request
         serializer = PlanRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -559,9 +596,15 @@ class PlanGenerationView(APIView):
             self.logger.info(f"Generating plan for user {request.user.id}: {description[:50]}...")
             plan = generate_plan(description)
             
+            # Increment call count
+            increment_api_call(request.user, 'openai')
+            
             # Validate the response structure
             response_serializer = PlanResponseSerializer(plan)
-            return Response(response_serializer.data, status=status.HTTP_200_OK)
+            return Response({
+                'plan': response_serializer.data,
+                'status': get_api_call_status(request.user, 'openai')
+            }, status=status.HTTP_200_OK)
             
         except ValueError as e:
             self.logger.warning(f"Invalid plan request from user {request.user.id}: {str(e)}")

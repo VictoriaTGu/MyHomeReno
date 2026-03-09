@@ -283,3 +283,8 @@ RAG_EMBEDDING_MODEL = os.getenv('RAG_EMBEDDING_MODEL', 'text-embedding-3-small')
 # ChromaDB Vector Store Persistence
 CHROMA_PERSIST_DIR = os.getenv('CHROMA_PERSIST_DIR', 'chroma_db')
 
+# API Call Throttling Configuration (Rate Limiting)
+# Daily limit for external API calls per user
+API_CALLS_PER_DAY_SERPAPI = int(os.getenv('API_CALLS_PER_DAY_SERPAPI', '10'))  # SerpAPI calls per day
+API_CALLS_PER_DAY_OPENAI = int(os.getenv('API_CALLS_PER_DAY_OPENAI', '10'))  # OpenAI calls per day
+

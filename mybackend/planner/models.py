@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+from datetime import timedelta
 
 
 class Project(models.Model):
@@ -93,3 +95,57 @@ class UserMaterial(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.material.name} ({self.quantity})"
+
+
+class APICallLog(models.Model):
+    """Track API calls per user per day for rate limiting."""
+    SERVICE_CHOICES = [
+        ('serpapi', 'SerpAPI'),
+        ('openai', 'OpenAI'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='api_calls')
+    service = models.CharField(max_length=20, choices=SERVICE_CHOICES)
+    call_count = models.PositiveIntegerField(default=1)
+    date = models.DateField(auto_now_add=True)  # Reset daily
+    timestamp = models.DateTimeField(auto_now=True)  # Last update time
+    
+    class Meta:
+        unique_together = ('user', 'service', 'date')
+        ordering = ['-date', 'service']
+        verbose_name = 'API Call Log'
+        verbose_name_plural = 'API Call Logs'
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.service} ({self.call_count} calls on {self.date})"
+    
+    @classmethod
+    def increment_call_count(cls, user, service):
+        """Increment API call count for user and service on today's date."""
+        from django.utils import timezone
+        today = timezone.now().date()
+        
+        obj, created = cls.objects.get_or_create(
+            user=user,
+            service=service,
+            date=today,
+            defaults={'call_count': 1}
+        )
+        
+        if not created:
+            obj.call_count += 1
+            obj.save(update_fields=['call_count', 'timestamp'])
+        
+        return obj
+    
+    @classmethod
+    def get_call_count(cls, user, service):
+        """Get today's API call count for user and service."""
+        from django.utils import timezone
+        today = timezone.now().date()
+        
+        try:
+            obj = cls.objects.get(user=user, service=service, date=today)
+            return obj.call_count
+        except cls.DoesNotExist:
+            return 0

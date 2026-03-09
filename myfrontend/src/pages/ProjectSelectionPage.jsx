@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProjectSelection from '../components/ProjectSelection';
 import PlanDisplay from '../components/PlanDisplay';
+import ApiLimitModal from '../components/ApiLimitModal';
 import '../components/ai-plan-section.css';
 import { getProjects, createShoppingList, getShoppingListsForUser } from '../services/api';
 import { getUserId } from '../services/api';
@@ -18,6 +19,8 @@ export default function ProjectSelectionPage() {
   const [planInput, setPlanInput] = useState("");
   const [planResult, setPlanResult] = useState(null);
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+  const [apiLimitError, setApiLimitError] = useState(null);
+  const [showApiLimitModal, setShowApiLimitModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -86,6 +89,12 @@ export default function ProjectSelectionPage() {
 
   return (
     <div>
+      <ApiLimitModal
+        isOpen={showApiLimitModal}
+        onClose={() => setShowApiLimitModal(false)}
+        service={apiLimitError?.service}
+        status={apiLimitError?.status}
+      />
       <div className="ai-plan-section">
         <h2>AI-Powered Project Planning</h2>
         <label htmlFor="plan-input">
@@ -103,12 +112,24 @@ export default function ProjectSelectionPage() {
             if (!planInput.trim()) return;
             setIsGeneratingPlan(true);
             setPlanResult(null);
+            setApiLimitError(null);
             try {
               const { generatePlan } = await import('../services/api');
               const response = await generatePlan(planInput);
-              setPlanResult(response.data);
+              setPlanResult(response.data?.plan || response.data);
             } catch (err) {
-              setPlanResult({ error: 'Failed to generate plan. See console.' });
+              // Check if it's an API limit exceeded error (429 status)
+              if (err.response?.status === 429) {
+                const limitData = err.response?.data;
+                setApiLimitError({
+                  service: limitData?.service,
+                  status: limitData?.status
+                });
+                setShowApiLimitModal(true);
+                // Don't set planResult error - let ApiLimitModal handle the display
+              } else {
+                setPlanResult({ error: 'Failed to generate plan. See console.' });
+              }
               console.error(err);
             } finally {
               setIsGeneratingPlan(false);

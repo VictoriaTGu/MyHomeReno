@@ -20,7 +20,8 @@ export default function ProductSearchModal({
   onSelect, 
   materialName, 
   materialId = null,
-  onceSelected = null 
+  onceSelected = null,
+  onApiLimitError = null
 }) {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -40,9 +41,21 @@ export default function ProductSearchModal({
     setError(null);
     try {
       const response = await searchProducts(materialName);
-      setSearchResults(response.data || []);
+      setSearchResults(response.data?.results || response.data || []);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to search products');
+      // Check if it's an API limit exceeded error (429 status)
+      if (err.response?.status === 429) {
+        const limitData = err.response?.data;
+        // Pass error up to parent component to handle ApiLimitModal
+        if (onApiLimitError) {
+          onApiLimitError({
+            service: limitData?.service,
+            status: limitData?.status
+          });
+        }
+      } else {
+        setError(err.response?.data?.detail || 'Failed to search products');
+      }
     } finally {
       setIsSearching(false);
     }
@@ -98,7 +111,8 @@ export default function ProductSearchModal({
   if (!isOpen) return null;
 
   return (
-    <div className="product-search-modal-overlay" onClick={handleClose}>
+    <>
+      <div className="product-search-modal-overlay" onClick={handleClose}>
       <div className="product-search-modal" onClick={(e) => e.stopPropagation()}>
         <div className="product-search-header">
           <h2>Search Products for "{materialName}"</h2>
@@ -135,5 +149,6 @@ export default function ProductSearchModal({
         )}
       </div>
     </div>
+    </>
   );
 }
