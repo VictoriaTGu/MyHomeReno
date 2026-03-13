@@ -3,104 +3,13 @@ import ItemDetailsPanel from './ItemDetailsPanel';
 import AddItemForm from './AddItemForm';
 import ProductSearchModal from './ProductSearchModal';
 import ApiLimitModal from './ApiLimitModal';
+import ShoppingListItemRow from './ShoppingListItemRow';
 import { getShoppingList, getUserMaterials, createUserMaterial, updateUserMaterial, deleteUserMaterial, updateShoppingListItem, deleteShoppingListItem, addShoppingListItem } from '../services/api';
 import './ShoppingList.css';
 
-function SimpleRow({ item, isOwned, onMarkOwned, onUpdateItem, onDeleteItem, onSearchProducts, isDetailsOpen, onOpenDetails, onCloseDetails }) {
-  const [qty, setQty] = useState(item.quantity);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
-
-  // Autosave on quantity change
-  useEffect(() => {
-    if (qty !== item.quantity) {
-      setSaving(true);
-      setError(null);
-      onUpdateItem(qty)
-        .catch(() => {
-          setError('Failed to update item quantity');
-        })
-        .finally(() => setSaving(false));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qty]);
-
-  const handleCheckboxChange = (e) => {
-    onMarkOwned(e.target.checked);
-  };
-  const unit = item.material?.unit || 'unit';
-  // Handle edge cases for units
-    function getDisplayUnit(quantity, unit) {
-      const normalized = unit.toLowerCase();
-      // Square feet
-      if (["sq ft", "sq feet", "sqft", "square feet", "square foot"].includes(normalized)) {
-        return quantity === 1 ? "square foot" : "square feet";
-      }
-      // Square meters
-      if (["sq m", "sq meter", "sq meters", "sqm", "square meter", "square meters"].includes(normalized)) {
-        return quantity === 1 ? "square meter" : "square meters";
-      }
-      // Feet
-      if (["ft", "feet"].includes(normalized)) {
-        return quantity === 1 ? "foot" : "feet";
-      }
-      // Meters
-      if (["m", "meter", "meters"].includes(normalized)) {
-        return quantity === 1 ? "meter" : "meters";
-      }
-      // Piece
-      if (normalized === "piece") {
-        return quantity === 1 ? "piece" : "pieces";
-      }
-      // Default pluralization
-      return quantity === 1 ? unit : unit + "s";
-    }
-  const displayUnit = getDisplayUnit(qty, unit);
-
-  // Check if material has store mapping
-  const hasStoreMapping = item.material?.store && item.material?.sku;
-
-  return (
-    <div className={`list-row ${isOwned ? 'have' : ''}`}>
-      <div className="checkbox-wrapper">
-        <label className="checkbox">
-          <input 
-            className="checkbox__trigger visuallyhidden" 
-            type="checkbox"
-            checked={isOwned}
-            onChange={handleCheckboxChange}
-          />
-          <span className="checkbox__symbol">
-            <svg aria-hidden="true" className="icon-checkbox" width="28px" height="28px" viewBox="0 0 28 28" version="1" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 14l8 7L24 7"></path>
-            </svg>
-          </span>
-        </label>
-      </div>
-      <div className="list-row-main">
-        {!hasStoreMapping && <h4>{item.material?.name}</h4>}
-        {hasStoreMapping && (
-          <p className="product-info" onClick={isDetailsOpen ? onCloseDetails : onOpenDetails} style={{ cursor: 'pointer', color: '#3182ce', fontWeight: 500 }}>
-            📦 {item.material.product_title} ({item.material.store}) - ${item.material.price}
-          </p>
-        )}
-      </div>
-      <div className="list-row-actions">
-        <input className="quantity-input" type="number" min="0" step="1" value={Number.isNaN(qty) ? '' : Math.floor(qty)} onChange={(e) => setQty(Math.max(0, Math.floor(parseFloat(e.target.value) || 0)))} disabled={saving} />
-        <p className="item-meta">{displayUnit}</p>
-        {!hasStoreMapping && (
-          <button className="search-btn" onClick={() => onSearchProducts(item)}>Search Stores</button>
-        )}
-        <button className="delete-btn" onClick={onDeleteItem}>Delete</button>
-      </div>
-      {error && <div className="error-message" style={{ color: 'red', marginTop: 4 }}>{error}</div>}
-    </div>
-  );
-}
-
 export default function ShoppingList({ listId, userId, onBack }) {
-    // Track which item is open for details
-    const [openDetailsItemId, setOpenDetailsItemId] = useState(null);
+  // Track which item is open for details
+  const [openDetailsItemId, setOpenDetailsItemId] = useState(null);
   const [list, setList] = useState(null);
   const [userMaterials, setUserMaterials] = useState({});
   const [isLoading, setIsLoading] = useState(true);
@@ -287,7 +196,7 @@ export default function ShoppingList({ listId, userId, onBack }) {
               .filter((it) => !checkUserHasQuantity(it))
               .map((item) => (
                 <div key={item.id}>
-                  <SimpleRow
+                  <ShoppingListItemRow
                     item={item}
                     isOwned={false}
                     onMarkOwned={(isOwned) => {
@@ -295,7 +204,7 @@ export default function ShoppingList({ listId, userId, onBack }) {
                         handleAddUserMaterial(item);
                       }
                     }}
-                    onUpdateItem={async (quantity) => {
+                    onUpdateQuantity={async (quantity) => {
                       try {
                         const res = await updateShoppingListItem(item.id, { quantity });
                         handleItemUpdate(item.id, { ...item, quantity: res.data.quantity });
@@ -314,7 +223,7 @@ export default function ShoppingList({ listId, userId, onBack }) {
                         alert('Failed to delete item');
                       }
                     }}
-                    onSearchProducts={handleSearchProducts}
+                    onSearchStores={handleSearchProducts}
                     isDetailsOpen={openDetailsItemId === item.id}
                     onOpenDetails={() => setOpenDetailsItemId(item.id)}
                     onCloseDetails={() => setOpenDetailsItemId(null)}
@@ -337,7 +246,7 @@ export default function ShoppingList({ listId, userId, onBack }) {
                 const userMat = userMaterials[item.material?.id];
                 return (
                   <div key={item.id}>
-                    <SimpleRow
+                    <ShoppingListItemRow
                       item={item}
                       isOwned={true}
                       onMarkOwned={(isOwned) => {
@@ -345,7 +254,7 @@ export default function ShoppingList({ listId, userId, onBack }) {
                           handleRemoveUserMaterial(item.material.id);
                         }
                       }}
-                      onUpdateItem={async (quantity) => {
+                      onUpdateQuantity={async (quantity) => {
                         try {
                           const res = await updateShoppingListItem(item.id, { quantity });
                           handleItemUpdate(item.id, { ...item, quantity: res.data.quantity });
@@ -364,7 +273,7 @@ export default function ShoppingList({ listId, userId, onBack }) {
                           alert('Failed to delete item');
                         }
                       }}
-                      onSearchProducts={handleSearchProducts}
+                      onSearchStores={handleSearchProducts}
                       isDetailsOpen={openDetailsItemId === item.id}
                       onOpenDetails={() => setOpenDetailsItemId(item.id)}
                       onCloseDetails={() => setOpenDetailsItemId(null)}

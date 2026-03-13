@@ -43,7 +43,8 @@ This creates:
 ### 5. Start Development Server
 
 ```bash
-export DEBUG=TRUE
+export DEBUG=True
+export STORE_SEARCH_USE_DUMMY=False
 python manage.py runserver 0.0.0.0:8000
 ```
 

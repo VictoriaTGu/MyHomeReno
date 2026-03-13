@@ -25,10 +25,29 @@ dist-ssr
 
 *.pyc
 .venv/
+
+# Environment variables and secrets (CRITICAL - never commit)
 *.env
+.env*
+!.env.example
+!.env.production  # Only if truly contains no secrets
+.secrets.baseline
+*.key
+*.pem
+*.p8
+secrets.txt
+secrets.json
+
 mybackend/planner/chroma_db/
 mybackend/chroma_db/
 mybackend/db.sqlite3
 myfrontend/package-lock.json
 mybackend/frontend_build/
+mybackend/staticfiles/
 chroma_db/
+
+# IDE and build artifacts
+*.swp
+*.swo
+*~
+.DS_Store
