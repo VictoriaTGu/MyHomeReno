@@ -73,6 +73,7 @@ def generate_plan(description: str) -> dict:
                 "steps": ["Step 1: description", "Step 2: description", ...],
                 "warnings": ["Safety warning 1", "Caution: warning 2", ...]
             }}
+            If the something in the materials list is already mentioned in the tools list, do not include it again in the materials list.
 
             Context from knowledge base:
             {context}

@@ -1,10 +1,10 @@
-# DIY Project Planner - Backend
+# DIY Project Planner
 
-Django REST Framework API for the DIY Project Planner Phase 1 application.
+React / Django / LLM DIY Project Planner.
 
 ## Prerequisites
 
-- Python 3.8+
+- Python 3.12
 - Virtual environment setup
 
 ## Setup
