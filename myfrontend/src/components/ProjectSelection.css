@@ -1,14 +1,14 @@
 .project-selection {
   padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  background: white;
+  background: var(--color-surface);
 }
 
 .project-selection h2 {
   font-size: 2rem;
   margin-bottom: 2rem;
   text-align: center;
+  color: var(--color-text);
+  font-family: var(--font-heading);
 }
 
 .projects-grid {
@@ -18,16 +18,16 @@
 }
 
 .project-card {
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
   padding: 1.5rem;
   background: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(82, 55, 34, 0.08);
   transition: box-shadow 0.3s;
 }
 
 .project-card:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 20px rgba(82, 55, 34, 0.16);
 }
 
 .project-img {
@@ -41,10 +41,11 @@
 .project-card h3 {
   margin: 0.5rem 0;
   font-size: 1.3rem;
+  color: var(--color-text);
 }
 
 .project-card p {
-  color: #666;
+  color: var(--color-muted);
   margin: 0.5rem 0 1.5rem;
   font-size: 0.95rem;
 }
@@ -52,22 +53,22 @@
 .select-btn {
   width: 100%;
   padding: 0.75rem;
-  background: #007bff;
+  background: var(--color-brand);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 10px;
   font-size: 1rem;
   cursor: pointer;
   transition: background 0.2s;
 }
 
 .select-btn:hover {
-  background: #0056b3;
+  background: var(--color-brand-deep);
 }
 .select-btn.edit-btn {
-  background: #28a745;
+  background: var(--color-accent);
 }
 
 .select-btn.edit-btn:hover {
-  background: #218838;
+  background: var(--color-brand);
 }

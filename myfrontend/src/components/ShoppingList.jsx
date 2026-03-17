@@ -291,15 +291,15 @@ export default function ShoppingList({ listId, userId, onBack }) {
       )}
 
       {/* Totals Section */}
-      <div className="totals-section" style={{ marginTop: '24px', padding: '16px', background: '#f8f9fa', borderRadius: '8px', textAlign: 'center' }}>
+      <div className="totals-section" style={{ marginTop: '24px', padding: '16px', background: 'var(--color-surface-soft)', borderRadius: '10px', textAlign: 'center', border: '1px solid var(--color-border)' }}>
         <p style={{ margin: '8px 0' }}><strong>Total Items:</strong> {totalItems}</p>
-        <p style={{ margin: '8px 0', fontSize: '18px', fontWeight: 'bold', color: '#3182ce' }}><strong>Total Price:</strong> ${totalPrice.toFixed(2)}</p>
+        <p style={{ margin: '8px 0', fontSize: '18px', fontWeight: 'bold', color: 'var(--color-brand)' }}><strong>Total Price:</strong> ${totalPrice.toFixed(2)}</p>
       </div>
 
       {/* Checkout Button */}
       <button 
         onClick={() => setCheckoutModalOpen(true)} 
-        style={{ marginTop: '16px', width: '100%', padding: '12px', fontSize: '16px', fontWeight: 'bold', background: '#27ae60', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+        style={{ marginTop: '16px', width: '100%', padding: '12px', fontSize: '16px', fontWeight: 'bold', background: 'var(--color-success)', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer' }}
       >
         Checkout
       </button>
@@ -307,18 +307,18 @@ export default function ShoppingList({ listId, userId, onBack }) {
       {/* Checkout Modal */}
       {checkoutModalOpen && (
         <div className="checkout-modal-overlay" onClick={() => setCheckoutModalOpen(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div className="checkout-modal" onClick={(e) => e.stopPropagation()} style={{ background: 'white', borderRadius: '12px', padding: '32px', maxWidth: '500px', textAlign: 'center' }}>
+          <div className="checkout-modal" onClick={(e) => e.stopPropagation()} style={{ background: 'var(--color-surface)', borderRadius: '14px', padding: '32px', maxWidth: '500px', textAlign: 'center', border: '1px solid var(--color-border)' }}>
             <h2 style={{ marginBottom: '16px' }}>💳 Become a DIY Member</h2>
-            <p style={{ marginBottom: '24px', color: '#666' }}>Use Cart Checkout to track your project and manage orders across stores.</p>
+            <p style={{ marginBottom: '24px', color: 'var(--color-muted)' }}>Use Cart Checkout to track your project and manage orders across stores.</p>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
               <button 
                 onClick={() => setCheckoutModalOpen(false)}
-                style={{ padding: '10px 24px', borderRadius: '6px', background: '#e0e0e0', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+                style={{ padding: '10px 24px', borderRadius: '8px', background: '#ddd1c4', border: 'none', cursor: 'pointer', fontWeight: 600, color: '#4c4137' }}
               >Close</button>
               <a 
                 href="#" 
                 onClick={(e) => { e.preventDefault(); }}
-                style={{ padding: '10px 24px', borderRadius: '6px', background: '#3182ce', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600, textDecoration: 'none' }}
+                style={{ padding: '10px 24px', borderRadius: '8px', background: 'var(--color-brand)', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600, textDecoration: 'none' }}
               >Learn More</a>
             </div>
           </div>

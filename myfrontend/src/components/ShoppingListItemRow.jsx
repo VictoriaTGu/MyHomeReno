@@ -121,7 +121,7 @@ export default function ShoppingListItemRow({
           <p
             className="product-info"
             onClick={isDetailsOpen ? onCloseDetails : onOpenDetails}
-            style={{ cursor: 'pointer', color: '#3182ce', fontWeight: 500 }}
+            style={{ cursor: 'pointer', color: 'var(--color-brand)', fontWeight: 600 }}
           >
             📦 {item.material.product_title} - ${item.material.price}
           </p>
@@ -150,7 +150,7 @@ export default function ShoppingListItemRow({
       </div>
 
       {error && (
-        <div className="error-message" style={{ color: 'red', marginTop: 4 }}>
+        <div className="error-message" style={{ marginTop: 4 }}>
           {error}
         </div>
       )}

@@ -62,7 +62,7 @@ body {
   width: 200px;
 }
 .item-details-link {
-  color: #3182ce;
+  color: var(--color-brand);
   text-decoration: none;
   font-size: 13px;
   font-family: 'Raleway', sans-serif;
@@ -71,7 +71,7 @@ body {
   transition: color 0.2s ease;
 }
 .item-details-link:hover {
-  color: #2c5aa0;
+  color: var(--color-brand-deep);
   text-decoration: underline;
 }
 .product-price {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../services/api';
+import './LoginPage.css';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -29,39 +30,41 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ maxWidth: 420, margin: '2rem auto' }}>
+    <div className="login-page">
+      <div className="login-card">
       <h2>Sign in</h2>
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: 8 }}>
+        <div className="login-field">
           <label>Username</label>
           <input
             autoFocus
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
-            style={{ width: '100%', padding: 8, marginTop: 4 }}
+            className="login-input"
           />
         </div>
-        <div style={{ marginBottom: 8 }}>
+        <div className="login-field">
           <label>Password</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            style={{ width: '100%', padding: 8, marginTop: 4 }}
+            className="login-input"
           />
         </div>
-        {error && <div style={{ color: 'red', marginBottom: 8 }}>{error}</div>}
-        <div>
-          <button type="submit" disabled={loading} style={{ padding: '8px 12px' }}>
+        {error && <div className="login-error">{error}</div>}
+        <div className="login-actions">
+          <button type="submit" disabled={loading} className="login-submit">
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </div>
       </form>
-      <p style={{ marginTop: 12, color: '#666' }}>
+      <p className="login-dev-note">
         For development: use the seeded account <strong>testuser</strong> / <strong>testpass123</strong>
       </p>
+      </div>
     </div>
   );
 }
